@@ -1,0 +1,633 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ─────────────────────────────────────────── */
+@layer base {
+  :root { color-scheme: dark; }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #1C1917;
+    color: #FAFAF9;
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #1C1917; }
+  ::-webkit-scrollbar-thumb { background: #44403C; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #57534E; }
+}
+
+/* ─── Components ────────────────────────────────────── */
+@layer components {
+
+  /* Card — 1px border, no shadow, no gradient */
+  .card {
+    background-color: #292524;
+    border: 1px solid #44403C;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: none;
+  }
+
+  /* Primary button — orange CTA */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #F97316;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Secondary button */
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #292524;
+    color: #FAFAF9;
+    border: 1px solid #44403C;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .btn-secondary:hover { border-color: #F97316; color: #F97316; }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Danger button */
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(239, 68, 68, 0.08);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+  .btn-danger:hover { background-color: rgba(239, 68, 68, 0.15); }
+  .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Input / Select / Textarea */
+  .input {
+    display: block;
+    width: 100%;
+    background-color: #3C3733;
+    border: 1px solid #57534E;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-family: 'DM Sans', sans-serif;
+    color: #FAFAF9;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .input:focus { border-color: #F97316; }
+  .input::placeholder { color: #57534E; }
+
+  /* Label */
+  .label {
+    display: block;
+    font-size: 0.75rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #A8A29E;
+    margin-bottom: 4px;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  /* Progress bar — orange fill on dark brown track */
+  .progress-bar {
+    height: 6px;
+    background-color: #3C3733;
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    background-color: #F97316;
+    transition: width 0.5s ease-out;
+  }
+}
+
+/* ─── Gamification Keyframes ──────────────────────────────── */
+@keyframes xpFloat {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  70%  { opacity: 1; transform: translateY(-40px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-70px) scale(0.8); }
+}
+@keyframes confettiFall {
+  0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+@keyframes bossEntrance {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes bannerSlide {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* ─── XP Float ────────────────────────────────────────────── */
+.xp-float-container {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.xp-float-pill {
+  background-color: #F97316;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  animation: xpFloat 1.4s ease-out forwards;
+  white-space: nowrap;
+}
+
+/* ─── Level Banner ────────────────────────────────────────── */
+.level-banner {
+  animation: bannerSlide 0.3s ease-out;
+}
+.level-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #292524;
+  border-left: 4px solid #F97316;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  border-radius: 4px;
+  border-top: 1px solid #44403C;
+  border-right: 1px solid #44403C;
+  border-bottom: 1px solid #44403C;
+}
+.level-banner-streak { border-left-color: #F97316; }
+.level-banner-icon { font-size: 1.1rem; }
+.level-banner-text {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #FAFAF9;
+  font-family: 'DM Sans', sans-serif;
+}
+.level-banner-text strong { color: #F97316; }
+.level-banner-close {
+  background: none;
+  border: none;
+  color: #57534E;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 2px 6px;
+  line-height: 1;
+}
+.level-banner-close:hover { color: #FAFAF9; }
+
+/* ─── Boss Battle Overlay ─────────────────────────────────── */
+.boss-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(28, 25, 23, 0.95);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.boss-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.boss-confetti-dot {
+  position: absolute;
+  top: -10px;
+  border-radius: 2px;
+  animation: confettiFall linear infinite;
+}
+.boss-card {
+  position: relative;
+  z-index: 2;
+  background-color: #292524;
+  border: 1px solid #44403C;
+  border-radius: 12px;
+  padding: 40px 48px;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  animation: bossEntrance 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.boss-subject-color {
+  width: 48px;
+  height: 6px;
+  border-radius: 9999px;
+  margin: 0 auto 16px;
+}
+.boss-subject-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.boss-headline {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #A8A29E;
+  font-weight: 400;
+  margin: 0 0 20px;
+}
+.boss-xp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #F97316;
+  line-height: 1;
+  margin-bottom: 24px;
+}
+.boss-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 28px;
+}
+.boss-stat { text-align: center; }
+.boss-stat-val {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #FAFAF9;
+}
+.boss-stat-lbl {
+  display: block;
+  font-size: 0.7rem;
+  color: #57534E;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+.boss-close { min-width: 140px; }
+
+/* ─── Streak Widget ────────────────────────────────────────── */
+.streak-widget {
+  background-color: #292524;
+  border: 1px solid #44403C;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.streak-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.streak-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #F97316;
+  line-height: 1;
+}
+.streak-label {
+  font-size: 0.7rem;
+  color: #A8A29E;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.streak-best {
+  font-size: 0.75rem;
+  color: #57534E;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 4px;
+}
+.streak-best-val { color: #A8A29E; }
+.streak-freezes {
+  font-size: 0.7rem;
+  color: #57534E;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 8px;
+}
+.streak-freeze-btn {
+  width: 100%;
+  font-size: 0.75rem !important;
+  padding: 6px 10px !important;
+}
+
+/* ─── Weekly Challenge ─────────────────────────────────────── */
+.weekly-card {
+  background-color: #292524;
+  border: 1px solid #44403C;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.weekly-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.weekly-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #A8A29E;
+}
+.weekly-xp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: #F97316;
+  font-weight: 600;
+}
+.weekly-label {
+  font-size: 0.8rem;
+  color: #FAFAF9;
+  font-family: 'DM Sans', sans-serif;
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+.weekly-done {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  color: #84CC16;
+  margin-top: 8px;
+  font-weight: 600;
+}
+.weekly-progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #57534E;
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* ─── Badge Cards ──────────────────────────────────────────── */
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.badge-card {
+  border-radius: 8px;
+  padding: 14px 12px;
+  text-align: center;
+  border: 1px solid #44403C;
+}
+.badge-card--earned { background-color: #292524; }
+.badge-card--locked { background-color: #292524; }
+.badge-icon-wrap { margin-bottom: 8px; display: flex; justify-content: center; }
+.badge-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #57534E;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.badge-card--earned .badge-name { color: #FAFAF9; }
+.badge-desc {
+  font-size: 0.68rem;
+  color: #57534E;
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.35;
+}
+.badge-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #F97316;
+  margin-top: 4px;
+}
+
+/* ─── Achievements Page ────────────────────────────────────── */
+.ach-page { max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
+.ach-title {
+  font-size: 1.25rem;
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+  color: #FAFAF9;
+  margin-bottom: 20px;
+}
+.ach-section { margin-bottom: 16px; }
+.ach-section-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #A8A29E;
+  margin-bottom: 12px;
+}
+.ach-level-section { }
+.ach-level-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.ach-level-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #F97316;
+  line-height: 1;
+}
+.ach-level-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  color: #A8A29E;
+  margin-top: 2px;
+}
+.ach-xp-total {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: #FAFAF9;
+}
+.ach-xp-to-next {
+  font-size: 0.72rem;
+  color: #57534E;
+  font-family: 'DM Mono', monospace;
+  margin-top: 4px;
+  text-align: right;
+}
+.ach-level-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+.ach-level-row-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+.ach-level-row-item--current {
+  border-color: #F97316;
+  background-color: rgba(249, 115, 22, 0.06);
+}
+.ach-level-row-item--done { opacity: 0.5; }
+.ach-lv-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #F97316;
+  width: 36px;
+  flex-shrink: 0;
+}
+.ach-lv-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  color: #FAFAF9;
+  flex: 1;
+}
+.ach-lv-xp {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #57534E;
+}
+.ach-streak-stats {
+  display: flex;
+  gap: 32px;
+}
+.ach-streak-stat { text-align: center; }
+.ach-streak-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FAFAF9;
+  display: block;
+}
+.ach-streak-lbl {
+  font-size: 0.7rem;
+  color: #57534E;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ach-empty {
+  font-size: 0.8rem;
+  color: #57534E;
+  font-family: 'DM Mono', monospace;
+}
+.ach-loading {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  color: #57534E;
+  padding: 40px;
+  text-align: center;
+}
+
+/* XP Log */
+.xp-log { display: flex; flex-direction: column; gap: 0; }
+.xp-log-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #3C3733;
+}
+.xp-log-row:last-child { border-bottom: none; }
+.xp-log-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #57534E;
+  width: 80px;
+  flex-shrink: 0;
+}
+.xp-log-label {
+  flex: 1;
+  font-size: 0.8rem;
+  color: #A8A29E;
+  font-family: 'DM Sans', sans-serif;
+}
+.xp-log-amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: #F97316;
+  font-weight: 600;
+}
+
+/* Sidebar level widget */
+.sidebar-level-widget {
+  padding: 12px 16px;
+  border-top: 1px solid #44403C;
+}
+.sidebar-level-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.sidebar-level-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: #A8A29E;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.sidebar-level-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: #F97316;
+  font-weight: 600;
+}
+.sidebar-xp-to-next {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #57534E;
+  margin-top: 4px;
+  text-align: right;
+}
+

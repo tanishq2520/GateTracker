@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "gate-journal",
+  "private_key_id": "e5230045c66205a290fa8cda4eda188ae71cacf3",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDhBClMDV2xLbcE\noyq6ksEPUZb3CJ7Ac2u5WSQwQ31E8HqknRKEkrYoOdpH6srlBusvs5DyqGgQFV2b\nwsEeIQvOS5ZCYm0HsG8PYsBN6gnMTpOCqXEkjSInHTJ7yWEXr60SUYfguiA6yOtx\np5OoSAoFc2eclvG3DITNH5Mt/ynJZT2iSZo6gCbuRLl7iGl0lwXYj/q1AwwpW8Tu\neHde8mYrok1PpZQSrGxe+m9bebytH8Z8SeCVam3FrfUn8uDbi6piEcHZZN4wcNVv\n6JrAZNpi45Gk8HUBc7jeZkFqxKulySVBhY0qxUVLnzF7oH1qRJW8TX+It2eW0bmL\nLUgMIOzVAgMBAAECggEAAXGhZFeKJdX4uiP1GF3scNFBvnfLKLj7R7X+MGM6NgUr\narJ2Qp/JC/qh/UW/49BVr1dXXfc/vlzPZtPvOubL6rr3TbudBNMUNG1WDxjdXAfb\ncnWXniKPChPhWfuYBk0ErwVogplzavWujzeby7/XY9IY9KO9+/3pX3EvXA4Q+HGV\nt1N0fwOJ6w+DRac9RIu0frTWFty6evYe2gYE0iiSjs7jeFrP35SX/JkpuWyQ3aaC\nQnRzX0vxQJCPPgUI3SiSsOuMlerIqctwNmbqPordBaBqaDV4gFf7go9xZLHYJubL\n9TF84TExmmtpzGMfYVZhLPmJaTCA8X5wHv4v1M9+gQKBgQD5nWD7ZGjQkPQrc7Il\nhtilhenYo7xGXvmLwjdVFzV38wSK5cfbUFKZ3LHxDC40CwTu/WsYMz1OoVr1LJwo\nSo1cWnMd4oNDqwlyFCXQMkmrUNeWEfgCN0EnpqY5UtpazOAoe07FqwURGUYFrIKu\nwJfZNEHHoX5gGcNCsaOVyLgXbQKBgQDmxbKCYtAnp0eBTt8J8bJhIKbI97K4BMhd\nH4ysUXECZyMb/sw2koC4nyDEz5r7Wj9CX6z4bPuZuD5WuJ0Kq7chxxux2BjZeqDE\nxku7Ye0vGM0jnW8rO4lXqi7vAqBs9sUoH5dnjULN1lX0QAblwkCNr3cHkp4p0tIR\nK2j4rVZCCQKBgE1JkXHFUT7i4vdhR1OfQQ1fPVy6td0EIzhG1mMeYIvXTxzCsPMT\nF8BUOTRtlRDAKLLm/HXtx5nFFCi9u0wuaT6jMumZ7RLSroYH/v1L1MuaqGXrAmON\nQDtKukUdhkZ/ERj3tRg3L8ZvkOLI213IfDvglk19j2eqEm9gGUqTb4yxAoGBAIti\nnY9jX5aT0vynRtAazEMeFZ8M/UVonhyhEbaC+l8ZLHucSnwrwNPCSWiWfGWU/OB6\nKV9jdBRE1GJM342yacpdGL0yaM/y4Wf43YUwgLIRqNX6IUtbinkIsZBrZbpq0mqJ\nqklBaTgqXYBJq+Dak2MAuEQ6qo1YaMk2DxEkoRUBAoGBAKOzZlbgAe/r7NA+drRi\nH3Lg6pPt5qAVabo6qVYOe2tupvxFiseF4dXNgtP8LQZ5yobv6ISOZCB5AdvmtwVr\n13hJ+FI1baOA55dFN2rJq1F5m6Q/kHCVNWhdx/zPpR0jcQdtPTh0i3ZMoQyyzyUk\nMDz6+qw34MV5vF7ub0GPFPG/\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@gate-journal.iam.gserviceaccount.com",
+  "client_id": "100275585750265758966",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40gate-journal.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

@@ -1,0 +1,325 @@
+// src/components/calendar/DayDetailPanel.jsx
+// Local-first, onSnapshot-driven day panel.
+// Shows ONLY tasks — no "Calendar Events" section.
+// All mutations update local state instantly; Firestore writes run in background.
+
+import React, { useState, useEffect, useRef } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { useSubjectsStore } from '../../stores/useSubjectsStore';
+import { useUIStore } from '../../stores/useUIStore';
+import { todayISO } from '../../utils/dateUtils';
+
+export default function DayDetailPanel({ date, onClose }) {
+  const { uid }   = useAuthStore();
+  const subjects  = useSubjectsStore(s => s.subjects);
+  const showToast = useUIStore(s => s.showToast);
+
+  const today    = todayISO();
+  const isToday  = date === today;
+  const isPast   = date < today;
+  const canEdit  = !isPast; // today + future are editable
+
+  // ── LOCAL STATE IS THE SOURCE OF TRUTH FOR THE UI ────────────
+  const [tasks,   setTasks]   = useState([]);
+  const [loaded,  setLoaded]  = useState(false);
+  const [editId,  setEditId]  = useState(null);
+  const [editVals,setEditVals]= useState({});
+  const [form,    setForm]    = useState({ description:'', subjectId:'', estimatedHours:'' });
+  const [confirm, setConfirm] = useState(false); // erase-all confirm state
+
+  // Keep a ref so the background save never captures a stale uid/date
+  const ctxRef = useRef({ uid, date });
+  useEffect(() => { ctxRef.current = { uid, date }; }, [uid, date]);
+
+  // ── REAL-TIME LISTENER ────────────────────────────────────────
+  useEffect(() => {
+    if (!uid || !date) return;
+    setLoaded(false);
+    const ref = doc(db, `users/${uid}/dailyLogs/${date}`);
+    const unsub = onSnapshot(ref, snap => {
+      setTasks(snap.exists() ? (snap.data().tasks || []) : []);
+      setLoaded(true);
+    }, err => {
+      console.error('DayDetailPanel snapshot error', err);
+      setLoaded(true);
+    });
+    return unsub; // cleanup on date/uid change
+  }, [uid, date]);
+
+  // ── SINGLE BACKGROUND SAVE — never blocks UI ─────────────────
+  const persist = (updatedTasks) => {
+    const { uid: u, date: d } = ctxRef.current;
+    const ref = doc(db, `users/${u}/dailyLogs/${d}`);
+    setDoc(ref, {
+      date: d,
+      tasks: updatedTasks,
+      totalPlannedHours:    updatedTasks.reduce((s,t) => s + (Number(t.estimatedHours)||0), 0),
+      totalCompletedHours:  updatedTasks.filter(t=>t.done).reduce((s,t) => s + (Number(t.estimatedHours)||0), 0),
+    }, { merge: true }).catch(err => {
+      console.error('DayDetailPanel save error', err);
+      showToast('Sync failed — check connection.', 'error');
+    });
+  };
+
+  // ── TASK ACTIONS (all update local state immediately) ─────────
+  const handleAdd = (e) => {
+    e.preventDefault();
+    const desc = form.description.trim();
+    const hrs  = parseFloat(form.estimatedHours);
+    if (!desc || !hrs) return;
+
+    const task = {
+      id:             crypto.randomUUID(),
+      description:    desc,
+      subjectId:      form.subjectId || null,
+      estimatedHours: hrs,
+      done:   false,
+      doneAt: null,
+    };
+    const updated = [...tasks, task];
+    setTasks(updated);                              // instant UI update
+    setForm({ description:'', subjectId: form.subjectId, estimatedHours:'' }); // clear form instantly
+    persist(updated);                               // background Firestore write
+  };
+
+  const handleRemove = (id) => {
+    const updated = tasks.filter(t => t.id !== id);
+    setTasks(updated);
+    persist(updated);
+  };
+
+  const handleToggleDone = (id) => {
+    if (!isToday) return; // no backdating
+    const updated = tasks.map(t =>
+      t.id === id ? { ...t, done: !t.done, doneAt: t.done ? null : new Date().toISOString() } : t
+    );
+    setTasks(updated);
+    persist(updated);
+  };
+
+  const handleEraseAll = () => {
+    setTasks([]);        // instant UI clear
+    setConfirm(false);
+    persist([]);         // background save
+    onClose();
+  };
+
+  const startEdit = (t) => {
+    setEditId(t.id);
+    setEditVals({ description: t.description, subjectId: t.subjectId||'', estimatedHours: String(t.estimatedHours) });
+  };
+
+  const saveEdit = () => {
+    const desc = editVals.description.trim();
+    const hrs  = parseFloat(editVals.estimatedHours);
+    if (!desc || !hrs) return;
+    const updated = tasks.map(t =>
+      t.id === editId ? { ...t, description: desc, subjectId: editVals.subjectId||null, estimatedHours: hrs } : t
+    );
+    setTasks(updated);
+    setEditId(null);
+    persist(updated);
+  };
+
+  // ── HELPERS ───────────────────────────────────────────────────
+  const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-IN', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric',
+  });
+  const subColor = id => subjects[id]?.color || '#57534E';
+  const subName  = id => subjects[id]?.name  || '';
+
+  const completedHrs = tasks.filter(t=>t.done).reduce((s,t)=>s+t.estimatedHours,0);
+  const plannedHrs   = tasks.reduce((s,t)=>s+t.estimatedHours,0);
+
+  // ── STYLES ────────────────────────────────────────────────────
+  const S = {
+    overlay: { position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:50,display:'flex',alignItems:'flex-start',justifyContent:'flex-end' },
+    panel:   { width:400,height:'100%',background:'#1C1917',borderLeft:'1px solid #44403C',display:'flex',flexDirection:'column',overflowY:'auto' },
+    hdr:     { padding:'16px 20px 12px',borderBottom:'1px solid #44403C',flexShrink:0 },
+    body:    { flex:1,overflowY:'auto',padding:'16px 20px',display:'flex',flexDirection:'column',gap:12 },
+    sectionLabel: { fontFamily:'DM Mono,monospace',fontSize:9,color:'#A8A29E',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:8 },
+    input:   { background:'#3C3733',border:'1px solid #57534E',borderRadius:4,padding:'7px 10px',color:'#FAFAF9',fontFamily:'DM Sans,sans-serif',fontSize:13,width:'100%',outline:'none',boxSizing:'border-box' },
+    select:  { background:'#3C3733',border:'1px solid #57534E',borderRadius:4,padding:'7px 10px',color:'#FAFAF9',fontFamily:'DM Sans,sans-serif',fontSize:12,width:'100%',outline:'none',boxSizing:'border-box' },
+    iconBtn: { background:'none',border:'none',cursor:'pointer',padding:'3px',display:'flex',alignItems:'center' },
+    taskCard:(done,missed)=>({
+      background: done ? '#84CC1608' : missed ? '#EF444408' : '#292524',
+      border:`1px solid ${done ? '#84CC1630' : missed ? '#EF444430' : '#44403C'}`,
+      borderRadius:6, padding:'9px 12px',
+    }),
+  };
+
+  return (
+    <div style={S.overlay} onClick={onClose}>
+      <div style={S.panel} onClick={e=>e.stopPropagation()}>
+
+        {/* ── Header ── */}
+        <div style={S.hdr}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+            <div>
+              <div style={{fontFamily:'DM Mono,monospace',fontSize:9,color:'#A8A29E',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4}}>
+                {isToday?'📅 Today':isPast?'⏮ Past Day':'🔜 Upcoming'}
+              </div>
+              <div style={{fontFamily:'DM Sans,sans-serif',fontSize:15,fontWeight:600,color:'#FAFAF9',lineHeight:1.4}}>
+                {fmt(date)}
+              </div>
+              {tasks.length>0 && (
+                <div style={{fontFamily:'JetBrains Mono,monospace',fontSize:10,color:'#F97316',marginTop:5}}>
+                  {completedHrs.toFixed(1)} / {plannedHrs.toFixed(1)} hrs done · {tasks.filter(t=>t.done).length}/{tasks.length} tasks
+                </div>
+              )}
+            </div>
+            <button onClick={onClose} style={{...S.iconBtn,color:'#57534E',fontSize:18}}>✕</button>
+          </div>
+        </div>
+
+        <div style={S.body}>
+
+          {/* ── Tasks section ── */}
+          <div>
+            <span style={S.sectionLabel}>Tasks {tasks.length>0 && `(${tasks.length})`}</span>
+
+            {!loaded && (
+              <div style={{color:'#57534E',fontFamily:'DM Mono,monospace',fontSize:11}}>Loading…</div>
+            )}
+
+            {loaded && tasks.length===0 && (
+              <p style={{color:'#57534E',fontFamily:'DM Mono,monospace',fontSize:11,marginBottom:12}}>
+                {isPast ? 'Nothing was planned for this day.' : 'No tasks yet. Add one below.'}
+              </p>
+            )}
+
+            {/* Task cards */}
+            <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:16}}>
+              {tasks.map(t => {
+                const isMissed = isPast && !t.done;
+                const isEditing = editId===t.id;
+
+                return (
+                  <div key={t.id} style={S.taskCard(t.done, isMissed)}>
+                    {isEditing ? (
+                      /* Edit form */
+                      <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                        <input autoFocus value={editVals.description} onChange={e=>setEditVals(v=>({...v,description:e.target.value}))} style={S.input} placeholder="Task description"/>
+                        <div style={{display:'flex',gap:6}}>
+                          <select value={editVals.subjectId} onChange={e=>setEditVals(v=>({...v,subjectId:e.target.value}))} style={{...S.select,flex:1}}>
+                            <option value="">No Subject</option>
+                            {Object.values(subjects).map(s=>(
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                          </select>
+                          <input type="number" step="0.5" min="0.1" value={editVals.estimatedHours} onChange={e=>setEditVals(v=>({...v,estimatedHours:e.target.value}))} style={{...S.input,width:60,textAlign:'center'}} placeholder="Hrs"/>
+                        </div>
+                        <div style={{display:'flex',gap:6}}>
+                          <button onClick={saveEdit} style={{flex:1,background:'#84CC16',color:'#1C1917',border:'none',borderRadius:4,padding:'6px',fontFamily:'DM Mono,monospace',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
+                          <button onClick={()=>setEditId(null)} style={{flex:1,background:'#3C3733',color:'#A8A29E',border:'none',borderRadius:4,padding:'6px',fontFamily:'DM Mono,monospace',fontSize:11,cursor:'pointer'}}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* View row */
+                      <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
+                        {/* Checkbox — only clickable today */}
+                        {canEdit && (
+                          <button onClick={()=>handleToggleDone(t.id)} style={{...S.iconBtn,width:17,height:17,borderRadius:3,border:`1px solid ${t.done?'#84CC16':'#57534E'}`,background:t.done?'#84CC16':'transparent',flexShrink:0,marginTop:2,cursor:isToday?'pointer':'default'}}>
+                            {t.done && <svg style={{width:10,height:10}} fill="none" viewBox="0 0 24 24" stroke="#1C1917" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
+                          </button>
+                        )}
+
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontFamily:'DM Sans,sans-serif',fontSize:13,color:t.done?'#A8A29E':isMissed?'#EF4444':'#FAFAF9',textDecoration:t.done?'line-through':'none',lineHeight:1.4}}>
+                            {t.description}
+                          </div>
+                          <div style={{display:'flex',gap:8,marginTop:3,flexWrap:'wrap',alignItems:'center'}}>
+                            {t.subjectId && <span style={{fontSize:9,fontFamily:'DM Mono,monospace',color:subColor(t.subjectId)}}>{subName(t.subjectId)}</span>}
+                            <span style={{fontSize:9,fontFamily:'JetBrains Mono,monospace',color:'#57534E'}}>{t.estimatedHours}h</span>
+                            {isMissed && <span style={{fontSize:9,fontFamily:'DM Mono,monospace',color:'#EF4444'}}>Missed</span>}
+                            {t.done    && <span style={{fontSize:9,fontFamily:'DM Mono,monospace',color:'#84CC16'}}>Done ✓</span>}
+                          </div>
+                        </div>
+
+                        {/* Edit + Remove — future/today only, and not done */}
+                        {canEdit && !t.done && (
+                          <div style={{display:'flex',gap:2,flexShrink:0}}>
+                            <button onClick={()=>startEdit(t)} style={{...S.iconBtn,color:'#A8A29E'}} title="Edit">
+                              <svg style={{width:14,height:14}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </button>
+                            <button onClick={()=>handleRemove(t.id)} style={{...S.iconBtn,color:'#57534E'}} title="Remove">
+                              <svg style={{width:14,height:14}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── Add Task Form ── */}
+            {canEdit && (
+              <form onSubmit={handleAdd} style={{display:'flex',flexDirection:'column',gap:8,padding:12,background:'#292524',border:'1px dashed #44403C',borderRadius:6}}>
+                <div style={{fontFamily:'DM Mono,monospace',fontSize:9,color:'#F97316',letterSpacing:'0.06em'}}>+ NEW TASK</div>
+                <input
+                  type="text"
+                  placeholder="What's the task? (e.g. Revise OS Unit 3)"
+                  value={form.description}
+                  onChange={e=>setForm(f=>({...f,description:e.target.value}))}
+                  style={S.input}
+                  required
+                />
+                <div style={{display:'flex',gap:8}}>
+                  <select value={form.subjectId} onChange={e=>setForm(f=>({...f,subjectId:e.target.value}))} style={{...S.select,flex:1}}>
+                    <option value="">No Subject</option>
+                    {Object.values(subjects).map(s=>(
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number" step="0.5" min="0.1"
+                    placeholder="Hrs"
+                    value={form.estimatedHours}
+                    onChange={e=>setForm(f=>({...f,estimatedHours:e.target.value}))}
+                    style={{...S.input,width:64,textAlign:'center'}}
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  style={{background:'#F97316',color:'#1C1917',border:'none',borderRadius:5,padding:'8px',fontFamily:'DM Mono,monospace',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em'}}
+                >
+                  + Add Task
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+
+        {/* ── Footer: Erase All ── */}
+        {tasks.length>0 && canEdit && (
+          <div style={{padding:'12px 20px',borderTop:'1px solid #44403C',flexShrink:0}}>
+            {!confirm ? (
+              <button
+                onClick={()=>setConfirm(true)}
+                style={{width:'100%',background:'transparent',color:'#EF4444',border:'1px solid #EF444440',borderRadius:6,padding:'9px',fontFamily:'DM Mono,monospace',fontSize:11,cursor:'pointer',letterSpacing:'0.04em'}}
+                onMouseEnter={e=>e.currentTarget.style.background='#EF444415'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+              >
+                🗑 Erase All Tasks for this Day
+              </button>
+            ) : (
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={handleEraseAll} style={{flex:1,background:'#EF4444',color:'#fff',border:'none',borderRadius:6,padding:'9px',fontFamily:'DM Mono,monospace',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                  Yes, Erase All
+                </button>
+                <button onClick={()=>setConfirm(false)} style={{flex:1,background:'#3C3733',color:'#A8A29E',border:'none',borderRadius:6,padding:'9px',fontFamily:'DM Mono,monospace',fontSize:11,cursor:'pointer'}}>
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
