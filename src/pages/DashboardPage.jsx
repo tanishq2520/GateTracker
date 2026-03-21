@@ -1,5 +1,6 @@
 // src/pages/DashboardPage.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { onSnapshot } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
 import { useGoalsStore } from '../stores/useGoalsStore';
 import { useSubjectsStore } from '../stores/useSubjectsStore';
@@ -9,11 +10,30 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { useUIStore } from '../stores/useUIStore';
 import { useGamificationStore, BADGE_DEFS } from '../stores/useGamificationStore';
 import { todayISO, formatDate, formatFull, getMonthRange, formatMonthYear, addDaysToISO } from '../utils/dateUtils';
+import { dailyLogsRef } from '../firebase/firestore';
 import LogTodayModal from '../components/calendar/LogTodayModal';
 import LevelBanner from '../components/gamification/LevelBanner';
 
 // ─── tiny helpers ─────────────────────────────────────────────
 const DAY_HDR = ['S','M','T','W','T','F','S'];
+const formatDayTypeLabel = (dayType) =>
+  dayType
+    ? dayType
+        .split('_')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+    : null;
+const abbreviateLabel = (label) => {
+  if (!label) return '';
+
+  const keepAsIs = ['leave', 'sem exam', 'sem_exam', 'buffer', 'mock test', 'pyq day'];
+  if (keepAsIs.some(value => value === label.toLowerCase())) return label;
+
+  const words = label.trim().split(' ').filter(Boolean);
+  if (words.length <= 1) return label;
+
+  return words.map(word => word[0].toUpperCase()).join('');
+};
 
 const S = {
   card:  { background:'#292524', border:'1px solid #44403C', borderRadius:8, padding:'10px 12px' },
@@ -29,6 +49,7 @@ export default function DashboardPage() {
   const subjects        = useSubjectsStore(s => s.subjects);
   const getOverallProgress = useSubjectsStore(s => s.getOverallProgress);
   const events          = useCalendarStore(s => s.events);
+  const dailyLogs       = useDailyLogStore(s => s.logs);
   const todayLog        = useDailyLogStore(s => s.getTodayLog);
   const markTaskDone    = useDailyLogStore(s => s.markTaskDone);
   const uid             = useAuthStore(s => s.uid);
@@ -39,15 +60,125 @@ export default function DashboardPage() {
   const [showLogModal, setShowLogModal] = useState(false);
   const [calView, setCalView] = useState({ year: new Date().getFullYear(), month: new Date().getMonth() });
   const [fullJourney, setFullJourney] = useState(false);
+  const [liveDailyLogs, setLiveDailyLogs] = useState(null);
 
   const daysLeft = getDaysToExam();
   const prepDay  = getPrepDay();
   const progress = getOverallProgress();
   const log      = todayLog();
+  const dailyLogsByDate = useMemo(
+    () => ({ ...(liveDailyLogs ?? {}), ...dailyLogs }),
+    [liveDailyLogs, dailyLogs]
+  );
+  const visibleEvents = useMemo(
+    () => Object.values(events).filter(event => event.source !== 'day_type'),
+    [events]
+  );
+
+  useEffect(() => {
+    if (!uid) {
+      setLiveDailyLogs(null);
+      return undefined;
+    }
+
+    return onSnapshot(dailyLogsRef(uid), (snapshot) => {
+      const nextLogs = {};
+      snapshot.forEach((docSnap) => {
+        nextLogs[docSnap.id] = docSnap.data();
+      });
+      setLiveDailyLogs(nextLogs);
+    });
+  }, [uid]);
+
+  const getTasksForDate = (date) => dailyLogsByDate[date]?.tasks || [];
+  const getExplicitDayTypeForDate = (date) =>
+    dailyLogsByDate[date]?.dayType
+    || Object.values(events).find(event => event.date === date && event.source === 'day_type')?.type
+    || null;
+  const getCellLabel = (date) => {
+    const primaryEvent = visibleEvents.find(event => event.date === date);
+    if (primaryEvent?.label) return primaryEvent.label;
+
+    const tasks = getTasksForDate(date);
+    if (tasks.length > 0) {
+      const subjectNames = [...new Set(
+        tasks
+          .map(task => task.subjectId)
+          .filter(Boolean)
+          .map((subjectId) => subjects[subjectId]?.name || subjectId)
+      )];
+      if (subjectNames.length === 1) return subjectNames[0];
+      if (subjectNames.length === 2) return subjectNames.join(' + ');
+      if (subjectNames.length > 2) return `${subjectNames[0]} +${subjectNames.length - 1} more`;
+      return tasks[0]?.description || 'Study';
+    }
+
+    return formatDayTypeLabel(getExplicitDayTypeForDate(date));
+  };
+  const getLogColor = (date) => {
+    const explicitDayType = getExplicitDayTypeForDate(date);
+    if (explicitDayType && explicitDayType !== 'study') {
+      return EVENT_TYPES[explicitDayType]?.color || EVENT_TYPES.study.color;
+    }
+    const tasks = getTasksForDate(date);
+    return subjects[tasks[0]?.subjectId]?.color || EVENT_TYPES.study.color;
+  };
+  const calendarDisplayMap = useMemo(() => {
+    const displayMap = {};
+
+    visibleEvents.forEach((event) => {
+      if (displayMap[event.date]) return;
+      displayMap[event.date] = {
+        date: event.date,
+        type: event.type,
+        label: event.label || null,
+        color: event.color || EVENT_TYPES[event.type]?.color || EVENT_TYPES.study.color,
+        status: event.status || 'planned',
+        source: 'event',
+      };
+    });
+
+    Object.entries(dailyLogsByDate).forEach(([date, log]) => {
+      const hasTasks = (log.tasks || []).length > 0;
+      const explicitDayType = getExplicitDayTypeForDate(date);
+      if (!displayMap[date] && (hasTasks || explicitDayType)) {
+        displayMap[date] = {
+          date,
+          type: explicitDayType || 'study',
+          label: null,
+          color: getLogColor(date),
+          status: 'planned',
+          source: 'log',
+        };
+      }
+      if (displayMap[date] && !displayMap[date].label) {
+        displayMap[date].label = getCellLabel(date);
+      }
+      if (displayMap[date] && displayMap[date].source === 'log') {
+        displayMap[date].color = getLogColor(date);
+      }
+    });
+
+    Object.keys(displayMap).forEach((date) => {
+      if (!displayMap[date].label) {
+        displayMap[date].label = getCellLabel(date);
+      }
+    });
+
+    return displayMap;
+  }, [visibleEvents, dailyLogsByDate, subjects, events]);
+  const getDisplayPillStyle = (entry) => {
+    const isDone = entry?.status === 'done';
+    const isMissed = entry?.status === 'missed' || entry?.status === 'missed_and_shifted';
+    return {
+      background: isDone ? '#22C55E22' : isMissed ? '#EF444422' : `${entry.color}22`,
+      color: isDone ? '#22C55E' : isMissed ? '#EF4444' : entry.color,
+    };
+  };
 
   // Today's events
   const todayEvents = useMemo(() =>
-    Object.values(events).filter(e => e.date === today), [events, today]);
+    visibleEvents.filter(e => e.date === today), [visibleEvents, today]);
 
   // First today event for "Today's Plan"
   const planEvent = todayEvents.find(e => e.status !== 'done') || todayEvents[0];
@@ -55,42 +186,35 @@ export default function DashboardPage() {
   // Next 7 days
   const next7 = useMemo(() => {
     const end = addDaysToISO(today, 7);
-    return Object.values(events)
-      .filter(e => e.date >= today && e.date <= end)
+    return Object.values(calendarDisplayMap)
+      .filter(entry => entry.date >= today && entry.date <= end && entry.label)
       .sort((a, b) => a.date.localeCompare(b.date))
       .slice(0, 7);
-  }, [events, today]);
+  }, [calendarDisplayMap, today]);
 
-  // Drift per subject (excluding sem_exam days)
-  const driftItems = useMemo(() => {
-    return Object.values(subjects)
-      .filter(s => s.plannedEndDate && s.originalEndDate)
-      .map(s => {
-        let rawDiff = Math.round((new Date(s.plannedEndDate) - new Date(s.originalEndDate)) / 86400000);
-        
-        // Count sem_exam events in the scheduled window for this subject.
-        // Or globally count sem_exam days between subject's original and planned end dates.
-        const semExams = Object.values(events).filter(e => 
-          e.type === 'sem_exam' && 
-          e.date > s.originalEndDate && 
-          e.date <= s.plannedEndDate
-        ).length;
-        
-        return {
-          name:  s.name,
-          color: s.color,
-          diff:  Math.max(0, rawDiff - semExams),
-          semExamsCount: semExams
-        };
-      });
-  }, [subjects, events]);
+  const dayTypeByDate = useMemo(() => {
+    const fromLogs = Object.entries(dailyLogsByDate).reduce((acc, [date, dayLog]) => {
+      if (dayLog?.dayType) acc[date] = dayLog.dayType;
+      return acc;
+    }, {});
 
-  const totalSemExamsFiltered = useMemo(() => {
-    // Max of sem exams that actually affected shifts
-    return driftItems.length ? Math.max(...driftItems.map(i => i.semExamsCount)) : 0;
-  }, [driftItems]);
+    Object.values(events).forEach((event) => {
+      if ((event.source === 'day_type' || event.type === 'leave' || event.type === 'sem_exam') && !fromLogs[event.date]) {
+        fromLogs[event.date] = event.type;
+      }
+    });
 
-  const overallDrift = driftItems.length ? Math.max(...driftItems.map(i => i.diff)) : 0;
+    return fromLogs;
+  }, [dailyLogsByDate, events]);
+
+  const leaveDays = useMemo(
+    () => Object.values(dayTypeByDate).filter(type => type === 'leave').length,
+    [dayTypeByDate]
+  );
+  const semExamShiftDays = useMemo(
+    () => Object.values(dayTypeByDate).filter(type => type === 'sem_exam').length,
+    [dayTypeByDate]
+  );
 
   // Mock avg score
   // Pull from gamification xpLog indirectly — just read useMockTestStore
@@ -104,15 +228,15 @@ export default function DashboardPage() {
   const renderCalGrid = (year, month, compact = false) => {
     const days = getMonthRange(year, month);
     return (
-      <div>
+      <div style={{ display:'flex', flexDirection:'column', flex:1, minHeight:0, overflow:'hidden' }}>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap: compact?2:3, marginBottom:4 }}>
           {DAY_HDR.map((d, i) => (
             <div key={i} style={{ textAlign:'center', fontSize:7, color:'#57534E', fontFamily:'DM Mono,monospace' }}>{d}</div>
           ))}
         </div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap: compact?2:3 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gridTemplateRows:'repeat(6, minmax(0, 1fr))', gap: compact?2:3, flex:1, minHeight:0 }}>
           {days.map(({ date, inMonth }) => {
-            const dayEvs = Object.values(events).filter(e => e.date === date);
+            const displayEntry = calendarDisplayMap[date] || null;
             const isToday = date === today;
             const isGate  = date === goals.gateExamDate;
             return (
@@ -123,15 +247,18 @@ export default function DashboardPage() {
                   background: '#1C1917',
                   border: `1px solid ${isToday ? '#F97316' : '#3C3733'}`,
                   borderRadius: 3,
-                  minHeight: compact ? 18 : 26,
+                  minHeight: compact ? 22 : 38,
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  padding: '2px 1px 1px',
+                  alignItems: 'stretch',
+                  padding: compact ? '2px 3px' : '3px 4px',
                   opacity: inMonth ? 1 : 0.18,
                   pointerEvents: inMonth ? 'auto' : 'none',
                   textDecoration: 'none',
                   position: 'relative',
+                  overflow: 'hidden',
+                  minWidth: 0,
+                  minHeight: 0,
                 }}
               >
                 <span style={{
@@ -140,17 +267,30 @@ export default function DashboardPage() {
                   fontFamily: 'JetBrains Mono,monospace',
                   fontWeight: isToday ? 700 : 400,
                   lineHeight: 1.2,
+                  textAlign: 'center',
                 }}>
                   {new Date(date + 'T00:00:00').getDate()}
                 </span>
-                {dayEvs.length > 0 && (
-                  <div style={{ display:'flex', gap:1, flexWrap:'wrap', justifyContent:'center', marginTop: 'auto' }}>
-                    {dayEvs.slice(0, 3).map(ev => (
-                      <div key={ev.id} style={{
-                        width: 5, height: 5, borderRadius: '50%',
-                        background: ev.status === 'done' ? '#84CC16' : ev.status === 'missed' ? '#EF4444' : ev.color,
-                      }} />
-                    ))}
+                {displayEntry?.label && (
+                  <div
+                    style={{
+                      ...getDisplayPillStyle(displayEntry),
+                      marginTop:'auto',
+                      marginBottom: compact ? 1 : 2,
+                      marginLeft: compact ? 1 : 2,
+                      marginRight: compact ? 1 : 2,
+                      borderRadius: 4,
+                      padding: compact ? '1px 3px' : '2px 4px',
+                      fontSize: compact ? 6 : 8,
+                      fontFamily: 'DM Sans,sans-serif',
+                      lineHeight: 1.2,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      textAlign: 'left',
+                    }}
+                  >
+                    {abbreviateLabel(displayEntry.label)}
                   </div>
                 )}
               </Link>
@@ -246,19 +386,27 @@ export default function DashboardPage() {
         {/* Schedule drift */}
         <div style={S.card}>
           <div style={S.hdr}>Schedule</div>
-          {driftItems.length === 0 ? (
-            <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:13, color:'#84CC16', fontWeight:600 }}>On track</div>
+          {leaveDays === 0 ? (
+            <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:13, color:'#84CC16', fontWeight:600 }}>On ideal schedule</div>
           ) : (
             <>
-              <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:13, color: driftColor(overallDrift), fontWeight:600 }}>
-                {overallDrift <= 0 ? 'On track' : `+${overallDrift}d drift`}
+              <div style={{ fontFamily:'JetBrains Mono,monospace', fontSize:13, color: driftColor(leaveDays), fontWeight:600 }}>
+                +{leaveDays} day{leaveDays > 1 ? 's' : ''} behind
               </div>
-              {totalSemExamsFiltered > 0 && (
+              <div style={{ fontSize:8, color:'#57534E', fontFamily:'DM Mono,monospace', marginTop:3, lineHeight:1.2 }}>
+                {leaveDays} leave day{leaveDays > 1 ? 's' : ''} taken
+              </div>
+              {semExamShiftDays > 0 && (
                 <div style={{ fontSize:8, color:'#57534E', fontFamily:'DM Mono,monospace', marginTop:3, lineHeight:1.2 }}>
-                  adjusted for {totalSemExamsFiltered} sem exam<br/>days (not drift)
+                  Also adjusted for {semExamShiftDays} sem exam<br/>day{semExamShiftDays > 1 ? 's' : ''} (not drift)
                 </div>
               )}
             </>
+          )}
+          {leaveDays === 0 && semExamShiftDays > 0 && (
+            <div style={{ fontSize:8, color:'#57534E', fontFamily:'DM Mono,monospace', marginTop:3, lineHeight:1.2 }}>
+              Schedule adjusted for {semExamShiftDays} sem exam<br/>day{semExamShiftDays > 1 ? 's' : ''} (not counted as drift)
+            </div>
           )}
         </div>
 
@@ -298,13 +446,18 @@ export default function DashboardPage() {
                     <div key={t.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 6px', background:'#1C1917', border:'1px solid #3C3733', borderRadius:4 }}>
                       <button 
                         onClick={() => markTaskDone(uid, today, t.id, !t.done)}
+                        title={t.done ? 'Mark as not done' : 'Mark as done'}
                         style={{
                           width:14, height:14, borderRadius:2, border:`1px solid ${t.done ? '#84CC16' : '#57534E'}`,
                           background: t.done ? '#84CC16' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center',
                           cursor:'pointer'
                         }}
                       >
-                        {t.done && <svg style={{ width:10, height:10, color:'#1C1917' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                        {t.done ? (
+                          <svg style={{ width:10, height:10, color:'#1C1917' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        ) : (
+                          <span style={{ color:'#EF4444', fontSize:10, fontWeight:700, lineHeight:1 }}>x</span>
+                        )}
                       </button>
                       
                       <span style={{ flex:1, fontSize:9, color: t.done ? '#A8A29E' : '#FAFAF9', fontFamily:'DM Sans,sans-serif', textDecoration: t.done ? 'line-through' : 'none', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
@@ -383,7 +536,7 @@ export default function DashboardPage() {
         <div style={{ display:'flex', flexDirection:'column', gap:8, minHeight:0 }}>
 
           {/* Journey Calendar — takes most space */}
-          <div style={{ ...S.card, flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
+          <div style={{ ...S.card, flex:1, display:'flex', flexDirection:'column', minHeight:0, overflow:'hidden', height:'100%' }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
               <span style={S.hdr}>Calendar</span>
               <button
@@ -426,20 +579,6 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Legend */}
-            <div style={{ borderTop:'1px solid #44403C', marginTop:6, paddingTop:6, display:'flex', flexWrap:'wrap', gap:'6px 10px' }}>
-              {Object.entries(EVENT_TYPES).map(([k, { label, color }]) => (
-                <span key={k} style={{ display:'flex', alignItems:'center', gap:4, fontSize:7, color:'#57534E', fontFamily:'DM Mono,monospace' }}>
-                  <span style={{ width:5, height:5, borderRadius:'50%', background:color, display:'inline-block' }} />{label}
-                </span>
-              ))}
-              <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:7, color:'#57534E', fontFamily:'DM Mono,monospace' }}>
-                <span style={{ width:5, height:5, borderRadius:'50%', background:'#84CC16', display:'inline-block' }} />Done
-              </span>
-              <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:7, color:'#57534E', fontFamily:'DM Mono,monospace' }}>
-                <span style={{ width:5, height:5, borderRadius:'50%', background:'#EF4444', display:'inline-block' }} />Missed
-              </span>
-            </div>
           </div>
 
           {/* Next 7 Days */}
@@ -451,14 +590,14 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                {next7.map(ev => (
-                  <div key={ev.id} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                {next7.map(entry => (
+                  <div key={entry.date} style={{ display:'flex', alignItems:'center', gap:6 }}>
                     <span style={{ fontSize:8, color:'#A8A29E', fontFamily:'JetBrains Mono,monospace', width:38, flexShrink:0 }}>
-                      {formatDate(ev.date, 'MMM d')}
+                      {formatDate(entry.date, 'MMM d')}
                     </span>
-                    <div style={{ width:5, height:5, borderRadius:'50%', background:ev.color, flexShrink:0 }} />
+                    <div style={{ width:5, height:5, borderRadius:'50%', background:entry.color, flexShrink:0 }} />
                     <span style={{ fontSize:8, color:'#FAFAF9', fontFamily:'DM Sans,sans-serif', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                      {ev.label || EVENT_TYPES[ev.type]?.label || ev.type}
+                      {entry.label}
                     </span>
                   </div>
                 ))}
@@ -467,28 +606,34 @@ export default function DashboardPage() {
           </div>
 
           {/* Drift */}
-          <div style={{ ...S.card, flexShrink:0 }}>
-            <div style={S.hdr}>Drift</div>
-            {driftItems.length === 0 ? (
-              <div style={{ fontSize:9, color:'#84CC16', fontFamily:'DM Mono,monospace' }}>On ideal schedule</div>
-            ) : overallDrift <= 0 ? (
-              <div style={{ fontSize:9, color:'#84CC16', fontFamily:'DM Mono,monospace' }}>On ideal schedule</div>
-            ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                {driftItems.filter(i => i.diff > 0).map((item, idx) => (
-                  <div key={idx} style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                    <span style={{ fontSize:8, color:'#A8A29E', fontFamily:'DM Mono,monospace' }}>{item.name.split(' ')[0]}</span>
-                    <span style={{ fontSize:8, color: driftColor(item.diff), fontFamily:'JetBrains Mono,monospace', fontWeight:600 }}>
-                      +{item.diff}d
-                    </span>
-                  </div>
-                ))}
-                <div style={{ borderTop:'1px solid #3C3733', marginTop:2, paddingTop:4, fontSize:8, color: driftColor(overallDrift), fontFamily:'JetBrains Mono,monospace', fontWeight:700 }}>
-                  Max drift: +{overallDrift}d
-                </div>
+        <div style={{ ...S.card, flexShrink:0 }}>
+          <div style={S.hdr}>Drift</div>
+          {leaveDays === 0 ? (
+            <div style={{ fontSize:9, color:'#84CC16', fontFamily:'DM Mono,monospace' }}>On ideal schedule</div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <span style={{ fontSize:8, color:'#A8A29E', fontFamily:'DM Mono,monospace' }}>Leave days</span>
+                <span style={{ fontSize:8, color: driftColor(leaveDays), fontFamily:'JetBrains Mono,monospace', fontWeight:600 }}>
+                  +{leaveDays}d
+                </span>
               </div>
-            )}
-          </div>
+              <div style={{ borderTop:'1px solid #3C3733', marginTop:2, paddingTop:4, fontSize:8, color: driftColor(leaveDays), fontFamily:'JetBrains Mono,monospace', fontWeight:700 }}>
+                +{leaveDays} day{leaveDays > 1 ? 's' : ''} behind
+              </div>
+            </div>
+          )}
+          {leaveDays === 0 && semExamShiftDays > 0 && (
+            <div style={{ marginTop:4, fontSize:8, color:'#57534E', fontFamily:'DM Mono,monospace', lineHeight:1.2 }}>
+              Schedule adjusted for {semExamShiftDays} sem exam day{semExamShiftDays > 1 ? 's' : ''} (not drift)
+            </div>
+          )}
+          {leaveDays > 0 && semExamShiftDays > 0 && (
+            <div style={{ marginTop:4, fontSize:8, color:'#57534E', fontFamily:'DM Mono,monospace', lineHeight:1.2 }}>
+              Also adjusted for {semExamShiftDays} sem exam day{semExamShiftDays > 1 ? 's' : ''} (not drift)
+            </div>
+          )}
+        </div>
         </div>
       </div>
 

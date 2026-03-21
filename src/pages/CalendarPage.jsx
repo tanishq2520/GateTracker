@@ -1,24 +1,26 @@
 // src/pages/CalendarPage.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { onSnapshot } from 'firebase/firestore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useCalendarStore, EVENT_TYPES } from '../stores/useCalendarStore';
+import { useDailyLogStore } from '../stores/useDailyLogStore';
 import { useSubjectsStore } from '../stores/useSubjectsStore';
 import { useGoalsStore } from '../stores/useGoalsStore';
 import { useUIStore } from '../stores/useUIStore';
-import { getMonthRange, formatMonthYear, todayISO, isFutureOrTodayISO, isPastISO, isTodayISO, getDatesBetween } from '../utils/dateUtils';
+import { getMonthRange, formatMonthYear, todayISO, getDatesBetween, toISODateString } from '../utils/dateUtils';
+import { calendarRef, dailyLogsRef } from '../firebase/firestore';
 import EventModal from '../components/calendar/EventModal';
 import LogTodayModal from '../components/calendar/LogTodayModal';
 import DayDetailPanel from '../components/calendar/DayDetailPanel';
 
-const STATUS_COLORS = {
-  planned: '',
-  done: '#22C55E',
-  missed: '#EF4444',
-  missed_and_shifted: '#EF4444',
-  shifted: '#FB923C',
-};
-
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const formatDayTypeLabel = (dayType) =>
+  dayType
+    ? dayType
+        .split('_')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+    : null;
 
 export default function CalendarPage() {
   const today = todayISO();
@@ -37,17 +39,51 @@ export default function CalendarPage() {
   const [bulkNewTask, setBulkNewTask] = useState({ description: '', estimatedHours: '' });
   const [bulkPreview, setBulkPreview] = useState(null);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [liveEvents, setLiveEvents] = useState(null);
+  const [liveDailyLogs, setLiveDailyLogs] = useState(null);
 
   const { uid } = useAuthStore();
   const events = useCalendarStore(s => s.events);
+  const dailyLogs = useDailyLogStore(s => s.logs);
   const subjects = useSubjectsStore(s => s.subjects);
   const goals = useGoalsStore(s => s.goals);
   const showToast = useUIStore(s => s.showToast);
-  const addEvent = useCalendarStore(s => s.addEvent);
   const bulkAddEvents = useCalendarStore(s => s.bulkAddEvents);
-  const markEventDone = useCalendarStore(s => s.markEventDone);
 
   const gateDate = goals.gateExamDate;
+  const calendarEvents = useMemo(
+    () => ({ ...(liveEvents ?? {}), ...events }),
+    [liveEvents, events]
+  );
+  const dailyLogsByDate = useMemo(
+    () => ({ ...(liveDailyLogs ?? {}), ...dailyLogs }),
+    [liveDailyLogs, dailyLogs]
+  );
+
+  useEffect(() => {
+    if (!uid) return undefined;
+
+    const unsubscribeEvents = onSnapshot(calendarRef(uid), (snapshot) => {
+      const nextEvents = {};
+      snapshot.forEach((docSnap) => {
+        nextEvents[docSnap.id] = { id: docSnap.id, ...docSnap.data() };
+      });
+      setLiveEvents(nextEvents);
+    });
+
+    const unsubscribeLogs = onSnapshot(dailyLogsRef(uid), (snapshot) => {
+      const nextLogs = {};
+      snapshot.forEach((docSnap) => {
+        nextLogs[docSnap.id] = docSnap.data();
+      });
+      setLiveDailyLogs(nextLogs);
+    });
+
+    return () => {
+      unsubscribeEvents();
+      unsubscribeLogs();
+    };
+  }, [uid]);
 
   const prevMonth = () => setViewDate(v => {
     const d = new Date(v.year, v.month - 1, 1);
@@ -59,26 +95,102 @@ export default function CalendarPage() {
   });
   const jumpToGate = () => {
     if (gateDate) {
-      const d = new Date(gateDate);
+      const d = new Date(`${gateDate}T00:00:00`);
       setViewDate({ year: d.getFullYear(), month: d.getMonth() });
     }
   };
 
-  const calDays = useMemo(() => getMonthRange(viewDate.year, viewDate.month), [viewDate.year, viewDate.month]);
+  const getEventsForDate = (date) => Object.values(calendarEvents).filter(e => e.date === date);
+  const getVisibleEventsForDate = (date) => getEventsForDate(date).filter(event => event.source !== 'day_type');
+  const getTasksForDate = (date) => dailyLogsByDate[date]?.tasks || [];
+  const getExplicitDayTypeForDate = (date) => dailyLogsByDate[date]?.dayType
+    || getEventsForDate(date).find(event => event.source === 'day_type')?.type
+    || null;
+  const getCellLabel = (date) => {
+    const primaryEvent = getVisibleEventsForDate(date)[0];
+    if (primaryEvent?.label) return primaryEvent.label;
 
-  const getEventsForDate = (date) => Object.values(events).filter(e => e.date === date);
+    const tasks = getTasksForDate(date);
+    if (tasks.length > 0) {
+      const subjectNames = [...new Set(
+        tasks
+          .map(task => task.subjectId)
+          .filter(Boolean)
+          .map((subjectId) => subjects[subjectId]?.name || subjectId)
+      )];
+      if (subjectNames.length === 1) return subjectNames[0];
+      if (subjectNames.length === 2) return subjectNames.join(' + ');
+      if (subjectNames.length > 2) return `${subjectNames[0]} +${subjectNames.length - 1} more`;
+      return tasks[0]?.description || 'Study';
+    }
+
+    return formatDayTypeLabel(getExplicitDayTypeForDate(date));
+  };
+  const getLogColor = (date) => {
+    const tasks = getTasksForDate(date);
+    const explicitDayType = getExplicitDayTypeForDate(date);
+    if (explicitDayType && explicitDayType !== 'study') {
+      return EVENT_TYPES[explicitDayType]?.color || EVENT_TYPES.study.color;
+    }
+    return subjects[tasks[0]?.subjectId]?.color || EVENT_TYPES.study.color;
+  };
+  const calendarDisplayMap = useMemo(() => {
+    const displayMap = {};
+
+    Object.values(calendarEvents)
+      .filter(event => event.source !== 'day_type')
+      .forEach((event) => {
+        if (displayMap[event.date]) return;
+        displayMap[event.date] = {
+          type: event.type,
+          label: event.label || null,
+          color: event.color || EVENT_TYPES[event.type]?.color || EVENT_TYPES.study.color,
+          status: event.status || 'planned',
+          source: 'event',
+        };
+      });
+
+    Object.entries(dailyLogsByDate).forEach(([date, log]) => {
+      const hasTasks = (log.tasks || []).length > 0;
+      const explicitDayType = getExplicitDayTypeForDate(date);
+      if (!displayMap[date] && (hasTasks || explicitDayType)) {
+        displayMap[date] = {
+          type: explicitDayType || 'study',
+          label: null,
+          color: getLogColor(date),
+          status: 'planned',
+          source: 'log',
+        };
+      }
+      if (displayMap[date] && !displayMap[date].label) {
+        displayMap[date].label = getCellLabel(date);
+      }
+      if (displayMap[date] && displayMap[date].source === 'log') {
+        displayMap[date].color = getLogColor(date);
+      }
+    });
+
+    Object.keys(displayMap).forEach((date) => {
+      if (!displayMap[date].label) {
+        displayMap[date].label = getCellLabel(date);
+      }
+    });
+
+    return displayMap;
+  }, [calendarEvents, dailyLogsByDate, subjects]);
+  const getDisplayPillStyle = (entry) => {
+    const isDone = entry?.status === 'done';
+    const isMissed = entry?.status === 'missed' || entry?.status === 'missed_and_shifted';
+    return {
+      background: isDone ? '#22C55E22' : isMissed ? '#EF444422' : `${entry.color}22`,
+      color: isDone ? '#22C55E' : isMissed ? '#EF4444' : entry.color,
+    };
+  };
 
   // Any date click — open the Day Detail Panel
   const handleDayClick = (date, inMonth) => {
     if (!inMonth) return;
-    setSelectedDate(date);
-    setModalMode('day-panel');
-  };
-
-  const handleEventClick = (e, event) => {
-    e.stopPropagation();
-    // Open DayDetailPanel for the event's date
-    setSelectedDate(event.date);
+    setSelectedDate(toISODateString(date));
     setModalMode('day-panel');
   };
 
@@ -102,23 +214,39 @@ export default function CalendarPage() {
   const handleBulkGenerate = async () => {
     if (!bulkPreview) return;
     setBulkSaving(true);
-    const { subjectId } = bulkForm;
-    const subject = subjects[subjectId];
-    // Attach the tasks array to the calendar event
-    const eventsToAdd = bulkPreview.dates.map(date => ({
-      date, type: 'study', subjectId,
-      label: subject?.name || '',
-      color: subject?.color || '#4F8EF7',
-      done: false, status: 'planned',
-      tasks: (bulkPreview.tasks || []).map(t => ({ ...t, id: Math.random().toString(36).substring(2,9) }))
-    }));
-    await bulkAddEvents(uid, eventsToAdd);
-    showToast(`Added ${eventsToAdd.length} study days for ${subject?.name}.`, 'success');
-    setBulkOpen(false);
-    setBulkPreview(null);
-    setBulkForm({ subjectId: '', startDate: '', endDate: '', days: [1,2,3,4,5], tasks: [] });
-    setBulkNewTask({ description: '', estimatedHours: '' });
-    setBulkSaving(false);
+    try {
+      const { subjectId } = bulkForm;
+      const subject = subjects[subjectId];
+      // Attach the tasks array to the calendar event
+      const eventsToAdd = bulkPreview.dates.map(date => ({
+        date: toISODateString(date),
+        type: 'study',
+        subjectId,
+        label: subject?.name || '',
+        color: subject?.color || '#4F8EF7',
+        done: false,
+        status: 'planned',
+        tasks: (bulkPreview.tasks || []).map(task => ({
+          id: crypto.randomUUID(),
+          description: task.description,
+          subjectId,
+          estimatedHours: Number(task.estimatedHours) || 0,
+          done: false,
+          doneAt: null,
+        })),
+      }));
+      await bulkAddEvents(uid, eventsToAdd);
+      showToast(`Added ${eventsToAdd.length} study days for ${subject?.name}.`, 'success');
+      setBulkOpen(false);
+      setBulkPreview(null);
+      setBulkForm({ subjectId: '', startDate: '', endDate: '', days: [1,2,3,4,5], tasks: [] });
+      setBulkNewTask({ description: '', estimatedHours: '' });
+    } catch (error) {
+      console.error('Quick Fill failed', error);
+      showToast('Quick Fill failed. Please try again.', 'error');
+    } finally {
+      setBulkSaving(false);
+    }
   };
 
   // Build months for full journey view
@@ -146,7 +274,7 @@ export default function CalendarPage() {
         </div>
         <div className={`grid grid-cols-7 ${compact ? 'gap-0.5' : 'gap-1'}`}>
           {days.map(({ date, inMonth }) => {
-            const dayEvents = getEventsForDate(date);
+            const displayEntry = calendarDisplayMap[date] || null;
             const isToday = date === today;
             const isPast = date < today;
             const isGate = date === gateDate;
@@ -165,29 +293,22 @@ export default function CalendarPage() {
                 `}
               >
                 <span className={`${compact ? 'mx-auto mt-1' : 'mb-0.5'} font-mono ${isToday ? 'text-accent-blue font-bold' : isPast && inMonth ? 'text-text-muted' : 'text-text-primary'}`}>
-                  {new Date(date).getDate()}
+                  {new Date(`${date}T00:00:00`).getDate()}
                 </span>
-                {!compact && dayEvents.slice(0, 2).map(ev => (
+                {displayEntry?.label && !compact && (
                   <div
-                    key={ev.id}
-                    onClick={e => handleEventClick(e, ev)}
-                    className={`rounded px-1 py-0.5 text-[10px] truncate cursor-pointer mb-0.5 ${ev.status === 'shifted' ? 'ring-1 ring-orange-400' : ''}`}
-                    style={{
-                      background: ev.status === 'done' ? '#22C55E22' : ev.status === 'missed' || ev.status === 'missed_and_shifted' ? '#EF444422' : `${ev.color}22`,
-                      color: ev.status === 'done' ? '#22C55E' : ev.status === 'missed' || ev.status === 'missed_and_shifted' ? '#EF4444' : ev.color,
-                    }}
+                    className={`rounded px-1 py-0.5 text-[10px] truncate mb-0.5 ${displayEntry.status === 'shifted' ? 'ring-1 ring-orange-400' : ''}`}
+                    style={getDisplayPillStyle(displayEntry)}
                   >
-                    {ev.label || EVENT_TYPES[ev.type]?.label || ev.type}
+                    {displayEntry.label}
                   </div>
-                ))}
-                {!compact && dayEvents.length > 2 && (
-                  <span className="text-text-muted text-[9px] pl-1">+{dayEvents.length - 2}</span>
                 )}
-                {compact && dayEvents.length > 0 && (
-                  <div className="flex flex-wrap gap-0.5 mx-auto mt-0.5">
-                    {dayEvents.slice(0, 3).map(ev => (
-                      <div key={ev.id} className="w-1 h-1 rounded-full" style={{ background: ev.color }} />
-                    ))}
+                {displayEntry?.label && compact && (
+                  <div
+                    className="mt-auto mx-0.5 mb-0.5 rounded px-1 py-[1px] text-[7px] truncate leading-none"
+                    style={getDisplayPillStyle(displayEntry)}
+                  >
+                    {displayEntry.label}
                   </div>
                 )}
               </div>

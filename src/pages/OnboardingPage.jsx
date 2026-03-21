@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useGoalsStore } from '../stores/useGoalsStore';
+import { todayISO } from '../utils/dateUtils';
 
 const STEPS = ['Welcome', 'GATE Date', 'Daily Target', 'Target Score', 'Done'];
 
@@ -28,7 +29,7 @@ export default function OnboardingPage() {
 
   const handleFinish = async () => {
     setSaving(true);
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayISO();
     await updateGoals(uid, {
       gateExamDate,
       dailyHourTarget: dailyHours,
@@ -75,7 +76,7 @@ export default function OnboardingPage() {
                 type="date"
                 value={gateExamDate}
                 onChange={e => handleDateChange(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+                min={todayISO()}
                 className="input mb-4"
               />
               {daysUntil !== null && (

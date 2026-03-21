@@ -6,6 +6,7 @@ import {
   onSnapshot, writeBatch, serverTimestamp, Timestamp
 } from 'firebase/firestore';
 import { db } from './config';
+import { format } from 'date-fns';
 
 // ── COLLECTION PATHS ──────────────────────────────────────────
 export const userPath = (uid) => `users/${uid}`;
@@ -21,7 +22,14 @@ export const dailyLogDoc = (uid, date) => doc(db, `users/${uid}/dailyLogs/${date
 export const settingsRef = (uid) => doc(db, `users/${uid}/settings/preferences`);
 
 // ── DATE UTILS ───────────────────────────────────────────────
-export const todayISO = () => new Date().toISOString().split('T')[0];
+export const todayISO = () => format(new Date(), 'yyyy-MM-dd');
+
+const calcTaskTotals = (tasks = []) => ({
+  totalPlannedHours: tasks.reduce((sum, task) => sum + (Number(task.estimatedHours) || 0), 0),
+  totalCompletedHours: tasks
+    .filter(task => task.done)
+    .reduce((sum, task) => sum + (Number(task.estimatedHours) || 0), 0),
+});
 
 // !! NO-BACKDATING RULE — call before any "mark done" write !!
 export const isAllowedToMarkDone = (plannedDateISO) => {
@@ -113,6 +121,59 @@ export const loadCalendarEvents = async (uid) => {
   return events;
 };
 
+export const batchCreateCalendarEventsAndDailyLogs = async (uid, eventsArray) => {
+  if (!eventsArray || eventsArray.length === 0) return;
+
+  const batch = writeBatch(db);
+  const dates = [...new Set(eventsArray.map(event => event.date).filter(Boolean))];
+  const existingLogEntries = await Promise.all(
+    dates.map(async (date) => {
+      const snap = await getDoc(dailyLogDoc(uid, date));
+      return [date, snap.exists() ? snap.data() : null];
+    })
+  );
+  const existingLogs = Object.fromEntries(existingLogEntries);
+  const generatedTasksByDate = {};
+
+  eventsArray.forEach((event) => {
+    const { id, date, tasks = [], ...eventData } = event;
+    batch.set(calendarEventDoc(uid, id), { id, date, tasks, ...eventData }, { merge: true });
+
+    if (!generatedTasksByDate[date]) {
+      generatedTasksByDate[date] = [];
+    }
+
+    generatedTasksByDate[date].push(
+      ...tasks.map(task => ({
+        id: task.id,
+        description: task.description,
+        subjectId: task.subjectId ?? event.subjectId ?? null,
+        estimatedHours: Number(task.estimatedHours) || 0,
+        done: Boolean(task.done),
+        doneAt: task.doneAt ?? null,
+      }))
+    );
+  });
+
+  Object.entries(generatedTasksByDate).forEach(([date, generatedTasks]) => {
+    const existingLog = existingLogs[date] || {};
+    const mergedTasks = [...(existingLog.tasks || []), ...generatedTasks];
+    const totals = calcTaskTotals(mergedTasks);
+
+    batch.set(
+      dailyLogDoc(uid, date),
+      {
+        date,
+        tasks: mergedTasks,
+        ...totals,
+      },
+      { merge: true }
+    );
+  });
+
+  await batch.commit();
+};
+
 // Batch write calendar events (for cascade shift)
 export const batchUpdateCalendarEvents = async (uid, updates) => {
   const batch = writeBatch(db);
@@ -120,6 +181,60 @@ export const batchUpdateCalendarEvents = async (uid, updates) => {
     const ref = calendarEventDoc(uid, id);
     batch.set(ref, data, { merge: true });
   });
+  await batch.commit();
+};
+
+export const batchShiftCalendarEventsAndDailyLogs = async (uid, eventUpdates, dateMoves) => {
+  const batch = writeBatch(db);
+
+  eventUpdates.forEach(({ id, data }) => {
+    batch.set(calendarEventDoc(uid, id), data, { merge: true });
+  });
+
+  if (dateMoves?.length) {
+    const relevantDates = [...new Set(dateMoves.flatMap(({ from, to }) => [from, to]))];
+    const existingLogEntries = await Promise.all(
+      relevantDates.map(async (date) => {
+        const snap = await getDoc(dailyLogDoc(uid, date));
+        return [date, snap.exists() ? snap.data() : null];
+      })
+    );
+    const originalLogs = Object.fromEntries(existingLogEntries);
+    const finalLogs = Object.fromEntries(
+      relevantDates.map((date) => [date, originalLogs[date] ? { ...originalLogs[date] } : { date }])
+    );
+
+    dateMoves.forEach(({ from }) => {
+      const sourceLog = finalLogs[from] || { date: from };
+      finalLogs[from] = {
+        ...sourceLog,
+        date: from,
+        tasks: [],
+        totalPlannedHours: 0,
+        totalCompletedHours: 0,
+      };
+    });
+
+    dateMoves.forEach(({ from, to }) => {
+      const movedTasks = originalLogs[from]?.tasks || [];
+      if (movedTasks.length === 0) return;
+
+      const targetLog = finalLogs[to] || { date: to, tasks: [] };
+      const mergedTasks = [...(targetLog.tasks || []), ...movedTasks];
+
+      finalLogs[to] = {
+        ...targetLog,
+        date: to,
+        tasks: mergedTasks,
+        ...calcTaskTotals(mergedTasks),
+      };
+    });
+
+    Object.entries(finalLogs).forEach(([date, log]) => {
+      batch.set(dailyLogDoc(uid, date), { ...log, date }, { merge: true });
+    });
+  }
+
   await batch.commit();
 };
 

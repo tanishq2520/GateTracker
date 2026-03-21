@@ -12,8 +12,18 @@ export const formatFull = (dateISO) => formatDate(dateISO, 'EEEE, MMMM d');
 export const formatMonthYear = (dateISO) => formatDate(dateISO, 'MMMM yyyy');
 export const formatMonth = (year, month) => format(new Date(year, month, 1), 'MMMM yyyy');
 
-export const todayISO = () => new Date().toISOString().split('T')[0];
-export const tomorrowISO = () => addDays(new Date(), 1).toISOString().split('T')[0];
+export const toISODateString = (value) => {
+  if (!value) return '';
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return format(date, 'yyyy-MM-dd');
+};
+
+export const todayISO = () => format(new Date(), 'yyyy-MM-dd');
+export const tomorrowISO = () => format(addDays(new Date(), 1), 'yyyy-MM-dd');
 
 export const daysUntil = (dateISO) => {
   if (!dateISO) return null;
@@ -25,9 +35,7 @@ export const daysSince = (dateISO) => {
   return differenceInDays(new Date(), parseISO(dateISO));
 };
 
-export const addDaysToISO = (dateISO, n) => {
-  return addDays(parseISO(dateISO), n).toISOString().split('T')[0];
-};
+export const addDaysToISO = (dateISO, n) => format(addDays(parseISO(dateISO), n), 'yyyy-MM-dd');
 
 export const isTodayISO = (dateISO) => dateISO === todayISO();
 export const isPastISO = (dateISO) => dateISO < todayISO();
@@ -38,7 +46,7 @@ export const getDaysInMonth = (year, month) => {
   const days = [];
   const date = new Date(year, month, 1);
   while (date.getMonth() === month) {
-    days.push(new Date(date).toISOString().split('T')[0]);
+    days.push(toISODateString(date));
     date.setDate(date.getDate() + 1);
   }
   return days;
@@ -51,19 +59,19 @@ export const getMonthRange = (year, month) => {
   // Pad with prev month days
   for (let i = startPad; i > 0; i--) {
     const d = new Date(year, month, 1 - i);
-    days.push({ date: d.toISOString().split('T')[0], inMonth: false });
+    days.push({ date: toISODateString(d), inMonth: false });
   }
   // Current month days
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = new Date(year, month, d).toISOString().split('T')[0];
+    const dateStr = toISODateString(new Date(year, month, d));
     days.push({ date: dateStr, inMonth: true });
   }
   // Pad end to complete 6 rows
   const remaining = 42 - days.length;
   for (let i = 1; i <= remaining; i++) {
     const d = new Date(year, month + 1, i);
-    days.push({ date: d.toISOString().split('T')[0], inMonth: false });
+    days.push({ date: toISODateString(d), inMonth: false });
   }
   return days;
 };

@@ -76,9 +76,14 @@ export default function LogTodayModal({ onClose }) {
                   <div key={t.id} className={`flex items-start gap-3 p-3 rounded-md border ${t.done ? 'border-accent-green/30 bg-accent-green/5 opacity-70' : 'border-border bg-bg/50'}`}>
                     <button 
                       onClick={() => markDoneAction(uid, today, t.id, !t.done)}
+                      title={t.done ? 'Mark as not done' : 'Mark as done'}
                       className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-accent-green border-accent-green' : 'border-text-secondary hover:border-accent-green'}`}
                     >
-                      {t.done && <svg className="w-3 h-3 text-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                      {t.done ? (
+                        <svg className="w-3 h-3 text-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      ) : (
+                        <span className="text-[10px] leading-none font-bold text-accent-red">x</span>
+                      )}
                     </button>
                     
                     <div className="flex-1 min-w-0">

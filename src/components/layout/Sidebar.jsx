@@ -1,17 +1,21 @@
 // src/components/layout/Sidebar.jsx
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useGoalsStore } from '../../stores/useGoalsStore';
 import { useGamificationStore } from '../../stores/useGamificationStore';
+import { useUserProfileStore } from '../../stores/useUserProfileStore';
+import Avatar from '../profile/Avatar';
+import ProfilePanel from '../profile/ProfilePanel';
 
 const NAV_ITEMS = [
-  { to: '/dashboard',    label: 'Dashboard' },
-  { to: '/calendar',     label: 'Calendar' },
-  { to: '/subjects',     label: 'Subjects' },
-  { to: '/mock-tests',   label: 'Mock Tests' },
-  { to: '/analytics',    label: 'Analytics' },
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/calendar', label: 'Calendar' },
+  { to: '/subjects', label: 'Subjects' },
+  { to: '/mock-tests', label: 'Mock Tests' },
+  { to: '/analytics', label: 'Analytics' },
   { to: '/achievements', label: 'Achievements' },
-  { to: '/settings',     label: 'Settings' },
+  { to: '/settings', label: 'Settings' },
 ];
 
 const NavIcon = ({ path }) => {
@@ -54,79 +58,205 @@ const NavIcon = ({ path }) => {
       </svg>
     ),
   };
+
   return icons[path] || null;
 };
 
 export default function Sidebar() {
-  const getDaysToExam    = useGoalsStore(s => s.getDaysToExam);
-  const goals            = useGoalsStore(s => s.goals);
-  const level            = useGamificationStore(s => s.level);
-  const levelName        = useGamificationStore(s => s.levelName);
-  const levelProgress    = useGamificationStore(s => s.levelProgress);
-  const xpToNext         = useGamificationStore(s => s.xpToNext);
-  const daysLeft         = getDaysToExam();
+  const { user } = useAuth();
+  const getDaysToExam = useGoalsStore((state) => state.getDaysToExam);
+  const goals = useGoalsStore((state) => state.goals);
+  const profile = useUserProfileStore((state) => state.profile);
+  const levelTitle = useGamificationStore((state) => state.levelName);
+  const currentLevel = useGamificationStore((state) => state.level);
+  const xpProgress = useGamificationStore((state) => state.levelProgress);
+  const xpToNext = useGamificationStore((state) => state.xpToNext);
+  const daysLeft = getDaysToExam();
+  const [profileOpen, setProfileOpen] = React.useState(false);
+  const displayName = profile.displayName || user?.displayName || 'User';
+
+  const openProfilePanel = () => setProfileOpen(true);
 
   return (
-    <aside className="hidden md:flex flex-col w-[220px] border-r border-border bg-surface h-full shrink-0">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-border">
-        <div className="text-text-primary font-mono text-sm font-medium">GATE CS TRACKER</div>
-        <div className="text-text-muted text-xs mt-0.5 font-mono">Study Planner</div>
-      </div>
+    <>
+      <aside
+        className="hidden md:flex shrink-0 border-r border-border"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          width: '220px',
+          background: '#292524',
+        }}
+      >
+        <div className="px-5 py-5 border-b border-border">
+          <div className="text-text-primary font-mono text-sm font-medium">GATE CS TRACKER</div>
+          <div className="text-text-muted text-xs mt-0.5 font-mono">Study Planner</div>
+        </div>
 
-      {/* Exam countdown */}
-      {daysLeft !== null && (
-        <div className="px-4 pt-4">
-          <div className="bg-nav-active border border-border rounded-md px-3 py-2">
-            <div className="text-accent font-data text-sm font-semibold">{daysLeft}d</div>
-            <div className="text-text-muted text-xs font-mono mt-0.5">days to GATE</div>
-            {goals.gateExamDate && (
-              <div className="text-text-muted text-xs font-mono">
-                {new Date(goals.gateExamDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+        {daysLeft !== null && (
+          <div className="px-4 pt-4">
+            <div className="bg-nav-active border border-border rounded-md px-3 py-2">
+              <div className="text-accent font-data text-sm font-semibold">{daysLeft}d</div>
+              <div className="text-text-muted text-xs font-mono mt-0.5">days to GATE</div>
+              {goals.gateExamDate && (
+                <div className="text-text-muted text-xs font-mono">
+                  {new Date(goals.gateExamDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          {NAV_ITEMS.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                  isActive
+                    ? 'bg-nav-active text-accent'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-nav-active/60'
+                }`
+              }
+            >
+              <span className="shrink-0"><NavIcon path={to} /></span>
+              <span className="font-sans">{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* ── BOTTOM SECTION ── */}
+        <div
+          style={{
+            marginTop: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+            borderTop: '1px solid #44403C',
+          }}
+        >
+          {/* Row 1 — XP Bar */}
+          <div
+            style={{
+              padding: '6px 12px 8px 12px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '4px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '9px',
+                  color: '#A8A29E',
+                  fontFamily: 'DM Mono',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {levelTitle || 'Enrolled'}
+              </span>
+              <span style={{ fontSize: '9px', color: '#F97316', fontFamily: 'DM Mono' }}>
+                Lv {currentLevel || 1}
+              </span>
+            </div>
+            <div style={{ height: '3px', background: '#3C3733', borderRadius: '2px', overflow: 'hidden' }}>
+              <div
+                style={{
+                  height: '100%',
+                  background: '#F97316',
+                  borderRadius: '2px',
+                  width: `${xpProgress || 0}%`,
+                  transition: 'width 0.3s ease',
+                }}
+              />
+            </div>
+            <div
+              style={{
+                fontSize: '9px',
+                color: '#57534E',
+                textAlign: 'right',
+                marginTop: '3px',
+                fontFamily: 'DM Mono',
+              }}
+            >
+              {xpToNext || 500} XP to next
+            </div>
+          </div>
+
+          {/* Row 2 — Profile */}
+          <div
+            onClick={openProfilePanel}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 12px',
+              cursor: 'pointer',
+              borderTop: '1px solid #3C3733',
+            }}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.background = '#3C3733';
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.background = 'transparent';
+            }}
+          >
+            <div style={{ flexShrink: 0 }}>
+              <Avatar size={34} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: '12px',
+                  color: '#FAFAF9',
+                  fontFamily: 'DM Mono',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {displayName}
               </div>
-            )}
+              <div
+                style={{
+                  fontSize: '10px',
+                  color: '#57534E',
+                  fontFamily: 'DM Sans',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {user?.email}
+              </div>
+            </div>
+            <span style={{ color: '#57534E', fontSize: '14px', flexShrink: 0 }}>{'\u203A'}</span>
+          </div>
+
+          {/* Row 3 — Credit */}
+          <div
+            style={{
+              fontSize: '10px',
+              color: '#57534E',
+              textAlign: 'center',
+              fontFamily: 'DM Sans',
+              padding: '6px 12px 10px 12px',
+              borderTop: '1px solid #3C3733',
+            }}
+          >
+            {'Made by Tanishq Pal \u2764\uFE0F'}
           </div>
         </div>
-      )}
+      </aside>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {NAV_ITEMS.map(({ to, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                isActive
-                  ? 'bg-nav-active text-accent'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-nav-active/60'
-              }`
-            }
-          >
-            <span className="shrink-0"><NavIcon path={to} /></span>
-            <span className="font-sans">{label}</span>
-          </NavLink>
-        ))}
-      </nav>
-
-      {/* Level widget */}
-      <div className="sidebar-level-widget">
-        <div className="sidebar-level-row">
-          <span className="sidebar-level-name">{levelName}</span>
-          <span className="sidebar-level-num">Lv {level}</span>
-        </div>
-        <div className="progress-bar" style={{ height: 4 }}>
-          <div className="progress-fill" style={{ width: `${levelProgress}%` }} />
-        </div>
-        {level < 10 && (
-          <div className="sidebar-xp-to-next">{xpToNext.toLocaleString()} XP to next</div>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="px-5 py-3 border-t border-border">
-        <p className="text-text-muted text-xs font-mono">Honest tracking.</p>
-      </div>
-    </aside>
+      <ProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />
+    </>
   );
 }

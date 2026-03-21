@@ -1,14 +1,19 @@
 // src/pages/SettingsPage.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useGoalsStore } from '../stores/useGoalsStore';
 import { useUIStore } from '../stores/useUIStore';
 
+import { auth } from '../firebase/config';
 import { exportAllData, cacheClear } from '../firebase/firestore';
 import { loadSettings, saveSettings } from '../firebase/firestore';
+import { todayISO } from '../utils/dateUtils';
 
 export default function SettingsPage() {
   const { uid } = useAuthStore();
+  const navigate = useNavigate();
   const goals = useGoalsStore(s => s.goals);
   const updateGoals = useGoalsStore(s => s.updateGoals);
   const showToast = useUIStore(s => s.showToast);
@@ -65,7 +70,7 @@ export default function SettingsPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `gate-tracker-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `gate-tracker-export-${todayISO()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast('Data exported successfully.', 'success');
@@ -83,6 +88,11 @@ export default function SettingsPage() {
     cacheClear();
     showToast('All local data cleared. Reload the page to start fresh.', 'info', 8000);
     setResetConfirm('');
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    navigate('/login');
   };
 
 
@@ -162,6 +172,22 @@ export default function SettingsPage() {
           <div className="flex flex-col gap-3 pt-2">
             <button onClick={handleExport} disabled={exporting} className="btn-secondary text-left">
               {exporting ? 'Exporting...' : 'Export All Data as JSON'}
+            </button>
+            <button
+              onClick={handleSignOut}
+              style={{
+                background: '#3C3733',
+                color: '#EF4444',
+                border: '1px solid #EF4444',
+                borderRadius: 6,
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontFamily: 'DM Mono, monospace',
+                fontSize: 12,
+                textAlign: 'left',
+              }}
+            >
+              Sign Out
             </button>
           </div>
         </div>

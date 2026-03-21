@@ -4,21 +4,31 @@
 // All mutations update local state instantly; Firestore writes run in background.
 
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useGoalsStore } from '../../stores/useGoalsStore';
+import { useCalendarStore, EVENT_TYPES } from '../../stores/useCalendarStore';
 import { useSubjectsStore } from '../../stores/useSubjectsStore';
 import { useUIStore } from '../../stores/useUIStore';
-import { todayISO } from '../../utils/dateUtils';
+import { todayISO, toISODateString } from '../../utils/dateUtils';
+import { calendarRef } from '../../firebase/firestore';
+
+const DAY_TYPE_ORDER = ['study', 'revision', 'mock_test', 'subject_test', 'pyq', 'sem_exam', 'leave', 'buffer'];
+const SHIFT_TRIGGER_TYPES = new Set(['leave', 'sem_exam']);
 
 export default function DayDetailPanel({ date, onClose }) {
   const { uid }   = useAuthStore();
+  const gateExamDate = useGoalsStore(s => s.goals.gateExamDate);
+  const upsertEvent = useCalendarStore(s => s.upsertEvent);
+  const cascadeShift = useCalendarStore(s => s.cascadeShift);
   const subjects  = useSubjectsStore(s => s.subjects);
   const showToast = useUIStore(s => s.showToast);
 
+  const dateKey = toISODateString(date);
   const today    = todayISO();
-  const isToday  = date === today;
-  const isPast   = date < today;
+  const isToday  = dateKey === today;
+  const isPast   = dateKey < today;
   const canEdit  = !isPast; // today + future are editable
 
   // ── LOCAL STATE IS THE SOURCE OF TRUTH FOR THE UI ────────────
@@ -28,25 +38,75 @@ export default function DayDetailPanel({ date, onClose }) {
   const [editVals,setEditVals]= useState({});
   const [form,    setForm]    = useState({ description:'', subjectId:'', estimatedHours:'' });
   const [confirm, setConfirm] = useState(false); // erase-all confirm state
+  const [dayType, setDayType] = useState(null);
 
   // Keep a ref so the background save never captures a stale uid/date
-  const ctxRef = useRef({ uid, date });
-  useEffect(() => { ctxRef.current = { uid, date }; }, [uid, date]);
+  const ctxRef = useRef({ uid, date: dateKey });
+  const logExistsRef = useRef(false);
+  const explicitDayTypeRef = useRef(null);
+  useEffect(() => { ctxRef.current = { uid, date: dateKey }; }, [uid, dateKey]);
 
   // ── REAL-TIME LISTENER ────────────────────────────────────────
   useEffect(() => {
-    if (!uid || !date) return;
+    if (!uid || !dateKey) return;
     setLoaded(false);
-    const ref = doc(db, `users/${uid}/dailyLogs/${date}`);
-    const unsub = onSnapshot(ref, snap => {
-      setTasks(snap.exists() ? (snap.data().tasks || []) : []);
-      setLoaded(true);
+    logExistsRef.current = false;
+    explicitDayTypeRef.current = null;
+
+    const ref = doc(db, `users/${uid}/dailyLogs/${dateKey}`);
+    const unsubLog = onSnapshot(ref, snap => {
+      logExistsRef.current = snap.exists();
+      if (snap.exists()) {
+        const nextTasks = snap.data().tasks || [];
+        const nextDayType = snap.data().dayType || (nextTasks.length > 0 ? 'study' : null);
+        explicitDayTypeRef.current = snap.data().dayType || null;
+        setTasks(nextTasks);
+        setDayType(nextDayType);
+        setLoaded(true);
+      }
     }, err => {
       console.error('DayDetailPanel snapshot error', err);
       setLoaded(true);
     });
-    return unsub; // cleanup on date/uid change
-  }, [uid, date]);
+
+    const eventQuery = query(calendarRef(uid), where('date', '==', dateKey));
+    const unsubEvents = onSnapshot(eventQuery, snapshot => {
+      if (logExistsRef.current) {
+        setLoaded(true);
+        return;
+      }
+
+      const fallbackTasks = snapshot.docs.flatMap((docSnap) => {
+        const event = docSnap.data();
+        return (event.tasks || []).map(task => ({
+          id: task.id || crypto.randomUUID(),
+          description: task.description,
+          subjectId: task.subjectId ?? event.subjectId ?? null,
+          estimatedHours: Number(task.estimatedHours) || 0,
+          done: Boolean(task.done),
+          doneAt: task.doneAt ?? null,
+        }));
+      });
+      const fallbackDayTypeEvent = snapshot.docs
+        .map((docSnap) => docSnap.data())
+        .find(event => event.source === 'day_type');
+      const fallbackDayType = fallbackDayTypeEvent?.type || (fallbackTasks.length > 0 ? 'study' : null);
+
+      setTasks(fallbackTasks);
+      if (!explicitDayTypeRef.current) {
+        setDayType(fallbackDayType);
+      }
+      setLoaded(true);
+    }, err => {
+      console.error('DayDetailPanel event fallback error', err);
+      setLoaded(true);
+    });
+
+    return () => {
+      unsubLog();
+      unsubEvents();
+    };
+  }, [uid, dateKey]);
 
   // ── SINGLE BACKGROUND SAVE — never blocks UI ─────────────────
   const persist = (updatedTasks) => {
@@ -80,6 +140,7 @@ export default function DayDetailPanel({ date, onClose }) {
     };
     const updated = [...tasks, task];
     setTasks(updated);                              // instant UI update
+    if (!explicitDayTypeRef.current) setDayType('study');
     setForm({ description:'', subjectId: form.subjectId, estimatedHours:'' }); // clear form instantly
     persist(updated);                               // background Firestore write
   };
@@ -87,6 +148,7 @@ export default function DayDetailPanel({ date, onClose }) {
   const handleRemove = (id) => {
     const updated = tasks.filter(t => t.id !== id);
     setTasks(updated);
+    if (!explicitDayTypeRef.current && updated.length === 0) setDayType(null);
     persist(updated);
   };
 
@@ -120,7 +182,57 @@ export default function DayDetailPanel({ date, onClose }) {
     );
     setTasks(updated);
     setEditId(null);
+    if (!explicitDayTypeRef.current && updated.length > 0) setDayType('study');
     persist(updated);
+  };
+
+  const handleDayTypeSelect = async (selectedType) => {
+    if (!uid || !dateKey) return;
+
+    const fallbackDayType = tasks.length > 0 ? 'study' : null;
+    const previousType = dayType || explicitDayTypeRef.current || fallbackDayType;
+    const previousTasks = tasks;
+    if (selectedType === previousType) return;
+
+    const shouldTriggerShift =
+      SHIFT_TRIGGER_TYPES.has(selectedType) &&
+      !SHIFT_TRIGGER_TYPES.has(previousType);
+
+    const dayTypeEventId = `daytype-${dateKey}`;
+
+    setDayType(selectedType);
+    explicitDayTypeRef.current = selectedType;
+    if (shouldTriggerShift) {
+      setTasks([]);
+    }
+
+    try {
+      await setDoc(doc(db, `users/${uid}/dailyLogs/${dateKey}`), {
+        date: dateKey,
+        dayType: selectedType,
+      }, { merge: true });
+
+      await upsertEvent(uid, dayTypeEventId, {
+        id: dayTypeEventId,
+        date: dateKey,
+        type: selectedType,
+        color: EVENT_TYPES[selectedType]?.color || EVENT_TYPES.study.color,
+        label: EVENT_TYPES[selectedType]?.label || 'Study',
+        source: 'day_type',
+        done: false,
+        status: 'planned',
+      });
+
+      if (shouldTriggerShift) {
+        await cascadeShift(uid, gateExamDate, dateKey, 1);
+      }
+    } catch (err) {
+      console.error('Day type save error', err);
+      setDayType(previousType || null);
+      explicitDayTypeRef.current = previousType || null;
+      setTasks(previousTasks);
+      showToast('Failed to update day type.', 'error');
+    }
   };
 
   // ── HELPERS ───────────────────────────────────────────────────
@@ -140,6 +252,18 @@ export default function DayDetailPanel({ date, onClose }) {
     hdr:     { padding:'16px 20px 12px',borderBottom:'1px solid #44403C',flexShrink:0 },
     body:    { flex:1,overflowY:'auto',padding:'16px 20px',display:'flex',flexDirection:'column',gap:12 },
     sectionLabel: { fontFamily:'DM Mono,monospace',fontSize:9,color:'#A8A29E',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:8 },
+    dayTypeTag:(active, color)=>({
+      background: active ? color : '#3C3733',
+      color: active ? '#1C1917' : '#A8A29E',
+      fontSize:10,
+      padding:'3px 10px',
+      borderRadius:4,
+      cursor:'pointer',
+      border:'none',
+      fontFamily:'DM Mono,monospace',
+      fontWeight: active ? 700 : 500,
+      transition:'background 0.2s ease, color 0.2s ease',
+    }),
     input:   { background:'#3C3733',border:'1px solid #57534E',borderRadius:4,padding:'7px 10px',color:'#FAFAF9',fontFamily:'DM Sans,sans-serif',fontSize:13,width:'100%',outline:'none',boxSizing:'border-box' },
     select:  { background:'#3C3733',border:'1px solid #57534E',borderRadius:4,padding:'7px 10px',color:'#FAFAF9',fontFamily:'DM Sans,sans-serif',fontSize:12,width:'100%',outline:'none',boxSizing:'border-box' },
     iconBtn: { background:'none',border:'none',cursor:'pointer',padding:'3px',display:'flex',alignItems:'center' },
@@ -162,7 +286,7 @@ export default function DayDetailPanel({ date, onClose }) {
                 {isToday?'📅 Today':isPast?'⏮ Past Day':'🔜 Upcoming'}
               </div>
               <div style={{fontFamily:'DM Sans,sans-serif',fontSize:15,fontWeight:600,color:'#FAFAF9',lineHeight:1.4}}>
-                {fmt(date)}
+                {fmt(dateKey)}
               </div>
               {tasks.length>0 && (
                 <div style={{fontFamily:'JetBrains Mono,monospace',fontSize:10,color:'#F97316',marginTop:5}}>
@@ -175,6 +299,26 @@ export default function DayDetailPanel({ date, onClose }) {
         </div>
 
         <div style={S.body}>
+
+          <div>
+            <span style={S.sectionLabel}>Day Type</span>
+            <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+              {DAY_TYPE_ORDER.map((type) => {
+                const active = dayType === type;
+                const tagColor = EVENT_TYPES[type]?.color || EVENT_TYPES.study.color;
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => handleDayTypeSelect(type)}
+                    style={S.dayTypeTag(active, tagColor)}
+                  >
+                    {EVENT_TYPES[type]?.label || type}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* ── Tasks section ── */}
           <div>
@@ -221,8 +365,12 @@ export default function DayDetailPanel({ date, onClose }) {
                       <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
                         {/* Checkbox — only clickable today */}
                         {canEdit && (
-                          <button onClick={()=>handleToggleDone(t.id)} style={{...S.iconBtn,width:17,height:17,borderRadius:3,border:`1px solid ${t.done?'#84CC16':'#57534E'}`,background:t.done?'#84CC16':'transparent',flexShrink:0,marginTop:2,cursor:isToday?'pointer':'default'}}>
-                            {t.done && <svg style={{width:10,height:10}} fill="none" viewBox="0 0 24 24" stroke="#1C1917" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>}
+                          <button onClick={()=>handleToggleDone(t.id)} title={t.done ? 'Mark as not done' : 'Mark as done'} style={{...S.iconBtn,width:17,height:17,borderRadius:3,border:`1px solid ${t.done?'#84CC16':'#57534E'}`,background:t.done?'#84CC16':'transparent',flexShrink:0,marginTop:2,cursor:isToday?'pointer':'default'}}>
+                            {t.done ? (
+                              <svg style={{width:10,height:10}} fill="none" viewBox="0 0 24 24" stroke="#1C1917" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            ) : (
+                              <span style={{color:'#EF4444',fontSize:11,fontWeight:700,lineHeight:1}}>x</span>
+                            )}
                           </button>
                         )}
 

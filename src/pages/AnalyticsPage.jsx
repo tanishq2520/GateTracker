@@ -25,6 +25,7 @@ export default function AnalyticsPage() {
   const goals = useGoalsStore(s => s.goals);
   const events = useCalendarStore(s => s.events);
   const today = todayISO();
+  const missedTypes = useMemo(() => new Set(['study', 'revision', 'pyq', 'subject_test']), []);
 
   // 10.1 — Syllabus coverage over time (approximate from daily logs and unit completion)
   const subjectList = Object.values(subjects);
@@ -49,7 +50,12 @@ export default function AnalyticsPage() {
   });
 
   // 10.4 — Missed days analysis
-  const missedEvents = Object.values(events).filter(e => e.date < today && (e.status === 'missed' || (e.done === false && e.status === 'planned')));
+  const missedEvents = Object.values(events).filter(e =>
+    e.date < today &&
+    e.source !== 'day_type' &&
+    missedTypes.has(e.type) &&
+    (e.status === 'missed' || (e.done === false && e.status === 'planned'))
+  );
   const missedBySubject = {};
   missedEvents.forEach(e => {
     if (e.subjectId) {

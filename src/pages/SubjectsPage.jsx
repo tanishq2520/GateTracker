@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useSubjectsStore, DEFAULT_SUBJECTS } from '../stores/useSubjectsStore';
 import { useUIStore } from '../stores/useUIStore';
-import { formatDate } from '../utils/dateUtils';
+import { formatDate, todayISO } from '../utils/dateUtils';
 import { nanoid } from '../utils/nanoid';
 
 const STATUS_BADGE = {
@@ -22,7 +22,7 @@ const STATUS_LABEL = {
 };
 
 function getSubjectStatus(subject) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayISO();
   if (subject.status === 'completed') return 'completed';
   if (subject.status === 'in_progress' && subject.plannedEndDate && subject.plannedEndDate < today) return 'overdue';
   return subject.status || 'not_started';

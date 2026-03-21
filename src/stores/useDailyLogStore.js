@@ -1,6 +1,7 @@
 // src/stores/useDailyLogStore.js
 import { create } from 'zustand';
 import { saveDailyLog, loadDailyLogs, cacheRead, todayISO } from '../firebase/firestore';
+import { toISODateString } from '../utils/dateUtils';
 
 // Helper to calc totals
 const calcTotals = (tasks = []) => {
@@ -8,6 +9,30 @@ const calcTotals = (tasks = []) => {
   const totalCompletedHours = tasks.filter(t => t.done).reduce((sum, t) => sum + (Number(t.estimatedHours) || 0), 0);
   return { totalPlannedHours, totalCompletedHours };
 };
+
+const normalizeTask = (task = {}) => ({
+  ...task,
+  done: Boolean(task.done),
+  doneAt: task.doneAt ?? null,
+  xpAwarded: Boolean(task.xpAwarded || task.done),
+});
+
+const normalizeLog = (log) => {
+  if (!log) return null;
+  const tasks = (log.tasks || []).map(normalizeTask);
+  const totals = calcTotals(tasks);
+  return {
+    ...log,
+    tasks,
+    ...totals,
+    sixHourRewardAwarded: Boolean(log.sixHourRewardAwarded || totals.totalCompletedHours >= 6),
+    fiveHourChallengeAwarded: Boolean(log.fiveHourChallengeAwarded || totals.totalCompletedHours >= 5),
+  };
+};
+
+const normalizeLogs = (logs = {}) => Object.fromEntries(
+  Object.entries(logs).map(([date, log]) => [date, normalizeLog(log)])
+);
 
 export const useDailyLogStore = create((set, get) => ({
   logs: {},
@@ -17,17 +42,17 @@ export const useDailyLogStore = create((set, get) => ({
   loadLogs: async (uid) => {
     const cached = cacheRead(`logs_${uid}`);
     if (cached) {
-      set({ logs: cached, todayLog: cached[todayISO()] || null, isLoaded: true });
+      const normalizedCached = normalizeLogs(cached);
+      set({ logs: normalizedCached, todayLog: normalizedCached[todayISO()] || null, isLoaded: true });
     }
-    const data = await loadDailyLogs(uid);
+    const data = normalizeLogs(await loadDailyLogs(uid));
     const today = todayISO();
     set({ logs: data || {}, todayLog: data?.[today] || null, isLoaded: true });
   },
 
   // Completely sets a day's log (useful for auto-creation from Quick Fill)
   setDailyLog: async (uid, date, logData) => {
-    const { totalPlannedHours, totalCompletedHours } = calcTotals(logData.tasks);
-    const log = { ...logData, date, totalPlannedHours, totalCompletedHours };
+    const log = normalizeLog({ ...logData, date });
     
     set(s => {
       const logs = { ...s.logs, [date]: log };
@@ -37,11 +62,9 @@ export const useDailyLogStore = create((set, get) => ({
   },
 
   addTask: async (uid, date, task) => {
-    const currentLog = get().logs[date] || { date, tasks: [], notes: '' };
-    const tasks = [...(currentLog.tasks || []), task];
-    const { totalPlannedHours, totalCompletedHours } = calcTotals(tasks);
-    
-    const newLog = { ...currentLog, tasks, totalPlannedHours, totalCompletedHours };
+    const currentLog = normalizeLog(get().logs[date] || { date, tasks: [], notes: '' });
+    const tasks = [...(currentLog.tasks || []), normalizeTask(task)];
+    const newLog = normalizeLog({ ...currentLog, tasks });
     
     set(s => {
       const logs = { ...s.logs, [date]: newLog };
@@ -51,13 +74,11 @@ export const useDailyLogStore = create((set, get) => ({
   },
 
   removeTask: async (uid, date, taskId) => {
-    const currentLog = get().logs[date];
+    const currentLog = normalizeLog(get().logs[date]);
     if (!currentLog) return;
 
     const tasks = (currentLog.tasks || []).filter(t => t.id !== taskId);
-    const { totalPlannedHours, totalCompletedHours } = calcTotals(tasks);
-    
-    const newLog = { ...currentLog, tasks, totalPlannedHours, totalCompletedHours };
+    const newLog = normalizeLog({ ...currentLog, tasks });
     
     set(s => {
       const logs = { ...s.logs, [date]: newLog };
@@ -67,14 +88,13 @@ export const useDailyLogStore = create((set, get) => ({
   },
 
   updateTask: async (uid, date, taskId, updates) => {
-    const currentLog = get().logs[date];
+    const currentLog = normalizeLog(get().logs[date]);
     if (!currentLog) return;
 
     const tasks = (currentLog.tasks || []).map(t =>
-      t.id === taskId ? { ...t, ...updates } : t
+      t.id === taskId ? normalizeTask({ ...t, ...updates }) : t
     );
-    const { totalPlannedHours, totalCompletedHours } = calcTotals(tasks);
-    const newLog = { ...currentLog, tasks, totalPlannedHours, totalCompletedHours };
+    const newLog = normalizeLog({ ...currentLog, tasks });
 
     set(s => {
       const logs = { ...s.logs, [date]: newLog };
@@ -84,20 +104,32 @@ export const useDailyLogStore = create((set, get) => ({
   },
 
   markTaskDone: async (uid, date, taskId, isDone) => {
-    const currentLog = get().logs[date];
+    const currentLog = normalizeLog(get().logs[date]);
     if (!currentLog) return;
 
     let targetTask = null;
+    let previousTask = null;
     const tasks = (currentLog.tasks || []).map(t => {
       if (t.id === taskId) {
-        targetTask = { ...t, done: isDone, doneAt: isDone ? new Date().toISOString() : null };
+        previousTask = t;
+        targetTask = normalizeTask({
+          ...t,
+          done: isDone,
+          doneAt: isDone ? new Date().toISOString() : null,
+          xpAwarded: t.xpAwarded || isDone,
+        });
         return targetTask;
       }
       return t;
     });
 
-    const { totalPlannedHours, totalCompletedHours } = calcTotals(tasks);
-    const newLog = { ...currentLog, tasks, totalPlannedHours, totalCompletedHours };
+    const totalCompletedHours = tasks.filter(t => t.done).reduce((sum, t) => sum + (Number(t.estimatedHours) || 0), 0);
+    const newLog = normalizeLog({
+      ...currentLog,
+      tasks,
+      sixHourRewardAwarded: currentLog.sixHourRewardAwarded || totalCompletedHours >= 6,
+      fiveHourChallengeAwarded: currentLog.fiveHourChallengeAwarded || totalCompletedHours >= 5,
+    });
     
     set(s => {
       const logs = { ...s.logs, [date]: newLog };
@@ -107,7 +139,16 @@ export const useDailyLogStore = create((set, get) => ({
 
     // Gamification hook — trigger only when marking DONE, and only for today's logs
     // We do NOT trigger gamification if un-checking a task (isDone = false) or if it's a past date
-    if (isDone && targetTask && date === todayISO()) {
+    const firstCompletion = Boolean(
+      isDone &&
+      targetTask &&
+      previousTask &&
+      !previousTask.done &&
+      !previousTask.xpAwarded &&
+      date === todayISO()
+    );
+
+    if (firstCompletion) {
       try {
         const { useGamificationStore } = await import('./useGamificationStore');
         const gam = useGamificationStore.getState();
@@ -119,12 +160,12 @@ export const useDailyLogStore = create((set, get) => ({
 
         // Check if crossed the 6h threshold just now
         const previousCompleted = currentLog.totalCompletedHours || 0;
-        if (previousCompleted < 6 && totalCompletedHours >= 6) {
+        if (!currentLog.sixHourRewardAwarded && previousCompleted < 6 && totalCompletedHours >= 6) {
           gam.awardXP(80, '6h+ study day');
         }
 
         // Check for 5h challenge progress
-        if (totalCompletedHours >= 5 && previousCompleted < 5) {
+        if (!currentLog.fiveHourChallengeAwarded && totalCompletedHours >= 5 && previousCompleted < 5) {
           gam.updateChallengeProgress('study_hours');
         }
 
@@ -141,8 +182,8 @@ export const useDailyLogStore = create((set, get) => ({
   },
 
   updateNotes: async (uid, date, notes) => {
-    const currentLog = get().logs[date] || { date, tasks: [], totalPlannedHours: 0, totalCompletedHours: 0 };
-    const newLog = { ...currentLog, notes };
+    const currentLog = normalizeLog(get().logs[date] || { date, tasks: [], totalPlannedHours: 0, totalCompletedHours: 0 });
+    const newLog = normalizeLog({ ...currentLog, notes });
     
     set(s => {
       const logs = { ...s.logs, [date]: newLog };
@@ -159,7 +200,7 @@ export const useDailyLogStore = create((set, get) => ({
     const result = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = toISODateString(d);
       // Use totalCompletedHours instead of hoursStudied
       result.push({ 
         date: dateStr, 
