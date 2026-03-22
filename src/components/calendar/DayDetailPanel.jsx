@@ -279,29 +279,29 @@ export default function DayDetailPanel({ date, onClose }) {
 
   // ── STYLES ────────────────────────────────────────────────────
   const S = {
-    overlay: { position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:50,display:'flex',alignItems:'flex-start',justifyContent:'flex-end' },
-    panel:   { width:400,height:'100%',background:'#1C1917',borderLeft:'1px solid #44403C',display:'flex',flexDirection:'column',overflowY:'auto' },
-    hdr:     { padding:'16px 20px 12px',borderBottom:'1px solid #44403C',flexShrink:0 },
+    overlay: { position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',backdropFilter:'blur(4px)',WebkitBackdropFilter:'blur(4px)',zIndex:50,display:'flex',alignItems:'flex-start',justifyContent:'flex-end' },
+    panel:   { width:400,height:'100%',background:'rgba(255,255,255,0.06)',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',boxShadow:'inset 0 1px 1px rgba(255,255,255,0.1)',borderLeft:'1px solid rgba(255,255,255,0.08)',display:'flex',flexDirection:'column',overflowY:'auto' },
+    hdr:     { padding:'16px 20px 12px',borderBottom:'1px solid rgba(255,255,255,0.08)',flexShrink:0 },
     body:    { flex:1,overflowY:'auto',padding:'16px 20px',display:'flex',flexDirection:'column',gap:12 },
-    sectionLabel: { fontFamily:'DM Mono,monospace',fontSize:9,color:'#A8A29E',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:8 },
+    sectionLabel: { fontFamily:'var(--font-mono)',fontSize:9,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:8 },
     dayTypeTag:(active, color)=>({
-      background: active ? color : '#3C3733',
-      color: active ? '#1C1917' : '#A8A29E',
+      background: active ? color : 'rgba(255,255,255,0.08)',
+      color: active ? '#1C1917' : 'rgba(255,255,255,0.45)',
       fontSize:10,
       padding:'3px 10px',
       borderRadius:4,
       cursor:'pointer',
       border:'none',
-      fontFamily:'DM Mono,monospace',
+      fontFamily:'var(--font-mono)',
       fontWeight: active ? 700 : 500,
       transition:'background 0.2s ease, color 0.2s ease',
     }),
-    input:   { background:'#3C3733',border:'1px solid #57534E',borderRadius:4,padding:'7px 10px',color:'#FAFAF9',fontFamily:'DM Sans,sans-serif',fontSize:13,width:'100%',outline:'none',boxSizing:'border-box' },
-    select:  { background:'#3C3733',border:'1px solid #57534E',borderRadius:4,padding:'7px 10px',color:'#FAFAF9',fontFamily:'DM Sans,sans-serif',fontSize:12,width:'100%',outline:'none',boxSizing:'border-box' },
+    input:   { background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,padding:'7px 10px',color:'rgba(255,255,255,0.9)',fontFamily:'var(--font-body)',fontSize:13,width:'100%',outline:'none',boxSizing:'border-box' },
+    select:  { background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:6,padding:'7px 10px',color:'rgba(255,255,255,0.9)',fontFamily:'var(--font-body)',fontSize:12,width:'100%',outline:'none',boxSizing:'border-box' },
     iconBtn: { background:'none',border:'none',cursor:'pointer',padding:'3px',display:'flex',alignItems:'center' },
     taskCard:(done,missed)=>({
-      background: done ? '#84CC1608' : missed ? '#EF444408' : '#292524',
-      border:`1px solid ${done ? '#84CC1630' : missed ? '#EF444430' : '#44403C'}`,
+      background: done ? 'rgba(132,204,22,0.06)' : missed ? 'rgba(239,68,68,0.06)' : 'rgba(255,255,255,0.04)',
+      border:`1px solid ${done ? 'rgba(132,204,22,0.2)' : missed ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.08)'}`,
       borderRadius:6, padding:'9px 12px',
     }),
   };
@@ -388,8 +388,8 @@ export default function DayDetailPanel({ date, onClose }) {
                           <input type="number" step="any" min="0.01" value={editVals.estimatedHours} onChange={e=>setEditVals(v=>({...v,estimatedHours:e.target.value}))} style={{...S.input,width:60,textAlign:'center'}} placeholder="Hrs"/>
                         </div>
                         <div style={{display:'flex',gap:6}}>
-                          <button onClick={saveEdit} style={{flex:1,background:'#84CC16',color:'#1C1917',border:'none',borderRadius:4,padding:'6px',fontFamily:'DM Mono,monospace',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
-                          <button onClick={()=>setEditId(null)} style={{flex:1,background:'#3C3733',color:'#A8A29E',border:'none',borderRadius:4,padding:'6px',fontFamily:'DM Mono,monospace',fontSize:11,cursor:'pointer'}}>Cancel</button>
+                          <button onClick={saveEdit} style={{flex:1,background:'rgba(132,204,22,0.85)',color:'#fff',border:'1px solid rgba(132,204,22,0.4)',borderRadius:6,padding:'6px',fontFamily:'var(--font-mono)',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
+                          <button onClick={()=>setEditId(null)} style={{flex:1,background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.55)',border:'none',borderRadius:6,padding:'6px',fontFamily:'var(--font-mono)',fontSize:11,cursor:'pointer'}}>Cancel</button>
                         </div>
                       </div>
                     ) : (
@@ -397,34 +397,34 @@ export default function DayDetailPanel({ date, onClose }) {
                       <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
                         {/* Checkbox — only clickable today */}
                         {canEdit && (
-                          <button onClick={()=>handleToggleDone(t.id)} title={t.done ? 'Mark as not done' : 'Mark as done'} style={{...S.iconBtn,width:17,height:17,borderRadius:3,border:`1px solid ${t.done?'#84CC16':'#57534E'}`,background:t.done?'#84CC16':'transparent',flexShrink:0,marginTop:2,cursor:isToday?'pointer':'default'}}>
+                          <button onClick={()=>handleToggleDone(t.id)} title={t.done ? 'Mark as not done' : 'Mark as done'} style={{...S.iconBtn,width:17,height:17,borderRadius:3,border:`1px solid ${t.done?'#34D399':'rgba(255,255,255,0.25)'}`,background:t.done?'#34D399':'transparent',flexShrink:0,marginTop:2,cursor:isToday?'pointer':'default'}}>
                             {t.done ? (
                               <svg style={{width:10,height:10}} fill="none" viewBox="0 0 24 24" stroke="#1C1917" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                             ) : (
-                              <span style={{color:'#EF4444',fontSize:11,fontWeight:700,lineHeight:1}}>x</span>
+                              <span style={{color:'#F87171',fontSize:11,fontWeight:700,lineHeight:1}}>x</span>
                             )}
                           </button>
                         )}
 
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontFamily:'DM Sans,sans-serif',fontSize:13,color:t.done?'#A8A29E':isMissed?'#EF4444':'#FAFAF9',textDecoration:t.done?'line-through':'none',lineHeight:1.4}}>
+                          <div style={{fontFamily:'var(--font-body)',fontSize:13,color:t.done?'rgba(255,255,255,0.35)':isMissed?'#F87171':'rgba(255,255,255,0.9)',textDecoration:t.done?'line-through':'none',lineHeight:1.4}}>
                             {t.description}
                           </div>
                           <div style={{display:'flex',gap:8,marginTop:3,flexWrap:'wrap',alignItems:'center'}}>
-                            {t.subjectId && <span style={{fontSize:9,fontFamily:'DM Mono,monospace',color:subColor(t.subjectId)}}>{subName(t.subjectId)}</span>}
-                            <span style={{fontSize:9,fontFamily:'JetBrains Mono,monospace',color:'#57534E'}}>{t.estimatedHours}h</span>
-                            {isMissed && <span style={{fontSize:9,fontFamily:'DM Mono,monospace',color:'#EF4444'}}>Missed</span>}
-                            {t.done    && <span style={{fontSize:9,fontFamily:'DM Mono,monospace',color:'#84CC16'}}>Done ✓</span>}
+                            {t.subjectId && <span style={{fontSize:9,fontFamily:'var(--font-mono)',color:subColor(t.subjectId)}}>{subName(t.subjectId)}</span>}
+                            <span style={{fontSize:9,fontFamily:'var(--font-mono)',color:'rgba(255,255,255,0.28)'}}>{t.estimatedHours}h</span>
+                            {isMissed && <span style={{fontSize:9,fontFamily:'var(--font-mono)',color:'#F87171'}}>Missed</span>}
+                            {t.done    && <span style={{fontSize:9,fontFamily:'var(--font-mono)',color:'#34D399'}}>Done ✓</span>}
                           </div>
                         </div>
 
                         {/* Edit + Remove — future/today only, and not done */}
                         {canEdit && !t.done && (
                           <div style={{display:'flex',gap:2,flexShrink:0}}>
-                            <button onClick={()=>startEdit(t)} style={{...S.iconBtn,color:'#A8A29E'}} title="Edit">
+                            <button onClick={()=>startEdit(t)} style={{...S.iconBtn,color:'rgba(255,255,255,0.4)'}} title="Edit">
                               <svg style={{width:14,height:14}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </button>
-                            <button onClick={()=>handleRemove(t.id)} style={{...S.iconBtn,color:'#57534E'}} title="Remove">
+                            <button onClick={()=>handleRemove(t.id)} style={{...S.iconBtn,color:'rgba(255,255,255,0.25)'}} title="Remove">
                               <svg style={{width:14,height:14}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                           </div>
@@ -438,12 +438,12 @@ export default function DayDetailPanel({ date, onClose }) {
 
             {/* ── Add Task Form ── */}
             {canEdit && dayType === 'sem_exam' && (
-              <div style={{padding:'10px 12px',background:'#374151',border:'1px solid #6B728040',borderRadius:6,fontFamily:'DM Mono,monospace',fontSize:11,color:'#9CA3AF',textAlign:'center'}}>
+              <div style={{padding:'10px 12px',background:'rgba(55,65,81,0.4)',border:'1px solid rgba(107,114,128,0.25)',borderRadius:6,fontFamily:'var(--font-mono)',fontSize:11,color:'rgba(255,255,255,0.5)',textAlign:'center'}}>
                 🚫 Sem Exam day — tasks cannot be added
               </div>
             )}
             {canEdit && dayType !== 'sem_exam' && (
-              <form onSubmit={handleAdd} style={{display:'flex',flexDirection:'column',gap:8,padding:12,background:'#292524',border:'1px dashed #44403C',borderRadius:6}}>
+              <form onSubmit={handleAdd} style={{display:'flex',flexDirection:'column',gap:8,padding:12,background:'rgba(255,255,255,0.04)',border:'1px dashed rgba(255,255,255,0.12)',borderRadius:6}}>
                 <div style={{fontFamily:'DM Mono,monospace',fontSize:9,color:'#F97316',letterSpacing:'0.06em'}}>+ NEW TASK</div>
                 <input
                   type="text"
@@ -472,7 +472,7 @@ export default function DayDetailPanel({ date, onClose }) {
                 </div>
                 <button
                   type="submit"
-                  style={{background:'#F97316',color:'#1C1917',border:'none',borderRadius:5,padding:'8px',fontFamily:'DM Mono,monospace',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em'}}
+                  style={{background:'rgba(249,115,22,0.85)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',color:'#fff',border:'1px solid rgba(249,115,22,0.4)',borderRadius:6,padding:'8px',fontFamily:'var(--font-mono)',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em'}}
                 >
                   + Add Task
                 </button>
@@ -483,22 +483,22 @@ export default function DayDetailPanel({ date, onClose }) {
 
         {/* ── Footer: Erase All ── */}
         {tasks.length>0 && canEdit && (
-          <div style={{padding:'12px 20px',borderTop:'1px solid #44403C',flexShrink:0}}>
+          <div style={{padding:'12px 20px',borderTop:'1px solid rgba(255,255,255,0.08)',flexShrink:0}}>
             {!confirm ? (
               <button
                 onClick={()=>setConfirm(true)}
-                style={{width:'100%',background:'transparent',color:'#EF4444',border:'1px solid #EF444440',borderRadius:6,padding:'9px',fontFamily:'DM Mono,monospace',fontSize:11,cursor:'pointer',letterSpacing:'0.04em'}}
-                onMouseEnter={e=>e.currentTarget.style.background='#EF444415'}
+                style={{width:'100%',background:'transparent',color:'#F87171',border:'1px solid rgba(248,113,113,0.25)',borderRadius:6,padding:'9px',fontFamily:'var(--font-mono)',fontSize:11,cursor:'pointer',letterSpacing:'0.04em'}}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(248,113,113,0.08)'}
                 onMouseLeave={e=>e.currentTarget.style.background='transparent'}
               >
                 🗑 Erase All Tasks for this Day
               </button>
             ) : (
               <div style={{display:'flex',gap:8}}>
-                <button onClick={handleEraseAll} style={{flex:1,background:'#EF4444',color:'#fff',border:'none',borderRadius:6,padding:'9px',fontFamily:'DM Mono,monospace',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                <button onClick={handleEraseAll} style={{flex:1,background:'rgba(239,68,68,0.85)',color:'#fff',border:'1px solid rgba(239,68,68,0.4)',borderRadius:6,padding:'9px',fontFamily:'var(--font-mono)',fontSize:11,fontWeight:700,cursor:'pointer'}}>
                   Yes, Erase All
                 </button>
-                <button onClick={()=>setConfirm(false)} style={{flex:1,background:'#3C3733',color:'#A8A29E',border:'none',borderRadius:6,padding:'9px',fontFamily:'DM Mono,monospace',fontSize:11,cursor:'pointer'}}>
+                <button onClick={()=>setConfirm(false)} style={{flex:1,background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.55)',border:'none',borderRadius:6,padding:'9px',fontFamily:'var(--font-mono)',fontSize:11,cursor:'pointer'}}>
                   Cancel
                 </button>
               </div>

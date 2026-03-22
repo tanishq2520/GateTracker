@@ -75,13 +75,13 @@ export default function EventModal({ date, event, mode, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="card max-w-md w-full" onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }} onClick={onClose}>
+      <div className="liquid-glass-strong" style={{ maxWidth: 448, width: '100%', borderRadius: 16, padding: 24 }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-mono font-medium text-text-primary">
+          <h3 style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
             {mode === 'edit-event' ? 'Edit Event' : 'Add Event'}
           </h3>
-          <span className="text-text-muted text-xs font-mono">{date || event?.date}</span>
+          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: 'var(--font-mono)' }}>{date || event?.date}</span>
         </div>
 
         <div className="space-y-4">
@@ -97,7 +97,12 @@ export default function EventModal({ date, event, mode, onClose }) {
                 <button
                   key={key}
                   onClick={() => setForm(f => ({ ...f, type: key }))}
-                  className={`px-2.5 py-1 rounded text-xs font-mono border transition-colors ${form.type === key ? 'border-accent-blue bg-accent-blue/10 text-accent-blue' : 'border-border text-text-muted hover:border-accent-blue/40'}`}
+                  style={{
+                    padding: '4px 10px', borderRadius: 4, fontSize: 11, fontFamily: 'var(--font-mono)', cursor: 'pointer', transition: 'all 0.15s',
+                    background: form.type === key ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${form.type === key ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                    color: form.type === key ? '#F97316' : 'rgba(255,255,255,0.55)',
+                  }}
                 >
                   {label}
                 </button>

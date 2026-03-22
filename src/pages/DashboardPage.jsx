@@ -520,7 +520,7 @@ function WeeklyChallengeInline() {
       ) : (
         <>
           <div style={{ fontSize: 9, color: '#FAFAF9', fontFamily: 'DM Sans,sans-serif', marginBottom: 6, lineHeight: 1.4 }}>{challenge.label}</div>
-          <div style={{ height: 3, background: '#3C3733', borderRadius: 9999, overflow: 'hidden', marginBottom: 4 }}>
+          <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 9999, overflow: 'hidden', marginBottom: 4 }}>
             <div style={{ height: '100%', width: `${pct}%`, background: '#F97316', borderRadius: 9999 }} />
           </div>
           <div style={{ fontSize: 7, color: '#A8A29E', fontFamily: 'JetBrains Mono,monospace' }}>{challenge.progress} / {challenge.target} · +{challenge.xpReward} XP</div>

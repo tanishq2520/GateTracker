@@ -110,59 +110,65 @@
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #1C1917; }
-  ::-webkit-scrollbar-thumb { background: #44403C; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #57534E; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
 }
 
 /* ─── Components ────────────────────────────────────── */
 @layer components {
 
-  /* Card — 1px border, no shadow, no gradient */
+  /* Card — glass panel */
   .card {
-    background-color: #292524;
-    border: 1px solid #44403C;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   }
 
-  /* Primary button — orange CTA */
+  /* Primary button — orange CTA with glass */
   .btn-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: #F97316;
+    background: rgba(249, 115, 22, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: #fff;
     padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.875rem;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-weight: 500;
-    border: none;
+    border: 1px solid rgba(249, 115, 22, 0.4);
     cursor: pointer;
     transition: opacity 0.15s;
   }
   .btn-primary:hover { opacity: 0.88; }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* Secondary button */
+  /* Secondary button — glass */
   .btn-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: #292524;
-    color: #FAFAF9;
-    border: 1px solid #44403C;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: rgba(255, 255, 255, 0.7);
+    border: none;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
     padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.875rem;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-weight: 500;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
+    transition: background 0.15s, color 0.15s;
   }
-  .btn-secondary:hover { border-color: #F97316; color: #F97316; }
+  .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.9); }
   .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* Danger button */
@@ -174,9 +180,9 @@
     color: #EF4444;
     border: 1px solid rgba(239, 68, 68, 0.25);
     padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.875rem;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-body);
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.15s;
@@ -184,31 +190,31 @@
   .btn-danger:hover { background-color: rgba(239, 68, 68, 0.15); }
   .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* Input / Select / Textarea */
+  /* Input / Select / Textarea — glass style */
   .input {
     display: block;
     width: 100%;
-    background-color: #3C3733;
-    border: 1px solid #57534E;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
     padding: 8px 12px;
     font-size: 0.875rem;
-    font-family: 'DM Sans', sans-serif;
-    color: #FAFAF9;
+    font-family: var(--font-body);
+    color: rgba(255, 255, 255, 0.9);
     outline: none;
     transition: border-color 0.15s;
   }
-  .input:focus { border-color: #F97316; }
-  .input::placeholder { color: #57534E; }
+  .input:focus { border-color: rgba(255, 255, 255, 0.3); }
+  .input::placeholder { color: rgba(255, 255, 255, 0.25); }
 
   /* Label */
   .label {
     display: block;
     font-size: 0.75rem;
-    font-family: 'DM Mono', monospace;
+    font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #A8A29E;
+    color: rgba(255, 255, 255, 0.4);
     margin-bottom: 4px;
   }
 
@@ -222,10 +228,10 @@
     font-weight: 500;
   }
 
-  /* Progress bar — orange fill on dark brown track */
+  /* Progress bar — glass track */
   .progress-bar {
     height: 6px;
-    background-color: #3C3733;
+    background-color: rgba(255, 255, 255, 0.1);
     border-radius: 9999px;
     overflow: hidden;
   }
@@ -288,14 +294,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background-color: #292524;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-left: 4px solid #F97316;
   padding: 10px 16px;
   margin-bottom: 12px;
   border-radius: 4px;
-  border-top: 1px solid #44403C;
-  border-right: 1px solid #44403C;
-  border-bottom: 1px solid #44403C;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
 }
 .level-banner-streak { border-left-color: #F97316; }
 .level-banner-icon { font-size: 1.1rem; }
@@ -321,7 +327,9 @@
 .boss-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(28, 25, 23, 0.95);
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 10000;
   display: flex;
   align-items: center;
@@ -342,8 +350,10 @@
 .boss-card {
   position: relative;
   z-index: 2;
-  background-color: #292524;
-  border: 1px solid #44403C;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 40px 48px;
   max-width: 480px;
@@ -407,8 +417,10 @@
 
 /* ─── Streak Widget ────────────────────────────────────────── */
 .streak-widget {
-  background-color: #292524;
-  border: 1px solid #44403C;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 14px 16px;
 }
@@ -453,8 +465,10 @@
 
 /* ─── Weekly Challenge ─────────────────────────────────────── */
 .weekly-card {
-  background-color: #292524;
-  border: 1px solid #44403C;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 14px 16px;
 }
@@ -510,10 +524,13 @@
   border-radius: 8px;
   padding: 14px 12px;
   text-align: center;
-  border: 1px solid #44403C;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
 }
-.badge-card--earned { background-color: #292524; }
-.badge-card--locked { background-color: #292524; }
+.badge-card--earned { }
+.badge-card--locked { opacity: 0.6; }
 .badge-icon-wrap { margin-bottom: 8px; display: flex; justify-content: center; }
 .badge-name {
   font-family: 'DM Mono', monospace;
@@ -602,7 +619,7 @@
   border: 1px solid transparent;
 }
 .ach-level-row-item--current {
-  border-color: #F97316;
+  border-color: rgba(249, 115, 22, 0.5);
   background-color: rgba(249, 115, 22, 0.06);
 }
 .ach-level-row-item--done { opacity: 0.5; }
@@ -663,7 +680,7 @@
   gap: 12px;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #3C3733;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .xp-log-row:last-child { border-bottom: none; }
 .xp-log-date {
@@ -689,7 +706,7 @@
 /* Sidebar level widget */
 .sidebar-level-widget {
   padding: 12px 16px;
-  border-top: 1px solid #44403C;
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 .sidebar-level-row {
   display: flex;

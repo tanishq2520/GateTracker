@@ -344,14 +344,14 @@ export default function CalendarPage() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-medium text-text-primary font-mono">Calendar</h1>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.02em', margin: 0 }}>Calendar</h1>
         <div className="flex items-center gap-2">
           {gateDate && (
             <button onClick={jumpToGate} className="btn-secondary text-xs">Jump to GATE date</button>
           )}
           <button
             onClick={() => setFullJourney(!fullJourney)}
-            className={`btn-secondary text-xs ${fullJourney ? 'border-accent-blue text-accent-blue' : ''}`}
+            className="btn-secondary text-xs"
           >
             {fullJourney ? 'Month View' : 'Full Journey View'}
           </button>
@@ -360,15 +360,15 @@ export default function CalendarPage() {
 
       {!fullJourney ? (
         /* Month view */
-        <div className="card">
+        <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
           <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth} className="text-text-muted hover:text-text-primary p-1">
+            <button onClick={prevMonth} className="text-text-muted hover:text-text-primary p-1" style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             </button>
-            <h2 className="text-text-primary font-mono text-sm font-medium">
+            <h2 style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500 }}>
               {formatMonthYear(`${viewDate.year}-${String(viewDate.month + 1).padStart(2, '0')}-01`)}
             </h2>
-            <button onClick={nextMonth} className="text-text-muted hover:text-text-primary p-1">
+            <button onClick={nextMonth} className="text-text-muted hover:text-text-primary p-1" style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </button>
           </div>
@@ -378,8 +378,8 @@ export default function CalendarPage() {
         /* Full Journey View */
         <div className="space-y-4">
           {journeyMonths.map(({ year, month }) => (
-            <div key={`${year}-${month}`} className="card">
-              <h3 className="text-xs font-mono text-text-muted mb-2">
+            <div key={`${year}-${month}`} className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+              <h3 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>
                 {formatMonthYear(`${year}-${String(month + 1).padStart(2, '0')}-01`)}
               </h3>
               {renderCalendarGrid(year, month, true)}
@@ -389,22 +389,22 @@ export default function CalendarPage() {
       )}
 
       {/* Legend */}
-      <div className="mt-4 card">
-        <div className="flex flex-wrap gap-4 text-xs text-text-muted">
+      <div className="liquid-glass mt-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
+        <div className="flex flex-wrap gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
           {Object.entries(EVENT_TYPES).map(([key, { label, color }]) => (
             <div key={key} className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full" style={{ background: color }} />
               <span>{label}</span>
             </div>
           ))}
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-accent-green" /><span>Done</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-accent-red" /><span>Missed</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-400" /><span>Shifted</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: '#34D399' }} /><span>Done</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: '#F87171' }} /><span>Missed</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: '#F97316' }} /><span>Shifted</span></div>
         </div>
       </div>
 
       {/* Bulk Add Helper */}
-      <div className="mt-4 card">
+      <div className="liquid-glass mt-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
         <button onClick={() => setBulkOpen(!bulkOpen)} className="flex items-center gap-2 text-sm font-medium text-text-primary w-full">
           <svg className={`w-4 h-4 text-text-muted transition-transform ${bulkOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
           Quick Fill Study Days
@@ -531,7 +531,7 @@ export default function CalendarPage() {
       )}
       {modalMode === 'view-event' && selectedEvent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="card max-w-sm w-full">
+          <div className="liquid-glass max-w-sm w-full" style={{ borderRadius: 16, padding: "18px 20px" }}>
             <h3 className="text-sm font-mono font-medium text-text-primary mb-3">Past Event</h3>
             <div className="space-y-2 text-sm">
               <div><span className="text-text-muted">Date: </span><span className="text-text-primary">{selectedEvent.date}</span></div>

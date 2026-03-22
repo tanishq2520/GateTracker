@@ -40,23 +40,23 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, position: 'relative', zIndex: 1 }}>
+      <div style={{ width: '100%', maxWidth: 480 }}>
         {/* Step indicator */}
         <div className="flex items-center gap-2 mb-8 justify-center">
           {STEPS.map((s, i) => (
             <div key={i} className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full transition-all ${i === step ? 'bg-accent-blue w-5' : i < step ? 'bg-accent-green' : 'bg-border'}`} />
+              <div style={{ width: i === step ? 20 : 8, height: 8, borderRadius: 9999, background: i === step ? '#F97316' : i < step ? '#34D399' : 'rgba(255,255,255,0.2)', transition: 'all 0.2s' }} />
             </div>
           ))}
         </div>
 
-        <div className="card p-8">
+        <div className="liquid-glass-strong" style={{ borderRadius: 20, padding: 40 }}>
           {step === 0 && (
             <div className="text-center">
-              <div className="text-4xl mb-4">📊</div>
-              <h1 className="text-xl font-medium text-text-primary mb-3 font-mono">GATE CS Study Tracker</h1>
-              <p className="text-text-secondary text-sm leading-relaxed mb-8">
+              <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'rgba(255,255,255,0.9)', marginBottom: 12 }}>GATE CS Study Tracker</h1>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.6, marginBottom: 32 }}>
                 This is your preparation tracker. It doesn't plan for you — you bring your plan, and it keeps you honest.
                 <br /><br />
                 Everything starts empty. No auto-scheduling. No pre-filling.
@@ -69,8 +69,8 @@ export default function OnboardingPage() {
 
           {step === 1 && (
             <div>
-              <h2 className="text-lg font-medium text-text-primary mb-2 font-mono">When is your GATE exam?</h2>
-              <p className="text-text-muted text-sm mb-6">This is required — it powers the countdown and calendar.</p>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'rgba(255,255,255,0.9)', marginBottom: 8 }}>When is your GATE exam?</h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 24 }}>This is required — it powers the countdown and calendar.</p>
               <label className="label">GATE Exam Date</label>
               <input
                 type="date"
@@ -80,8 +80,8 @@ export default function OnboardingPage() {
                 className="input mb-4"
               />
               {daysUntil !== null && (
-                <div className="bg-accent-blue/10 border border-accent-blue/20 rounded-md px-3 py-2 mb-6">
-                  <span className="text-accent-blue text-sm font-mono">That's {daysUntil} days from today.</span>
+                <div style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 8, padding: '8px 12px', marginBottom: 24 }}>
+                  <span style={{ color: '#F97316', fontSize: 13, fontFamily: 'var(--font-mono)' }}>That's {daysUntil} days from today.</span>
                 </div>
               )}
               <div className="flex gap-3">
@@ -99,19 +99,19 @@ export default function OnboardingPage() {
 
           {step === 2 && (
             <div>
-              <h2 className="text-lg font-medium text-text-primary mb-2 font-mono">Daily study target</h2>
-              <p className="text-text-muted text-sm mb-6">How many hours can you realistically study per day?</p>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'rgba(255,255,255,0.9)', marginBottom: 8 }}>Daily study target</h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 24 }}>How many hours can you realistically study per day?</p>
               <div className="mb-2 flex items-center justify-between">
                 <label className="label">Hours per day</label>
-                <span className="text-accent-blue font-data text-xl font-medium">{dailyHours}h</span>
+                <span style={{ color: '#F97316', fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 600 }}>{dailyHours}h</span>
               </div>
               <input
                 type="range"
                 min={1} max={14} value={dailyHours}
                 onChange={e => setDailyHours(parseInt(e.target.value))}
-                className="w-full accent-accent-blue mb-8 cursor-pointer"
+                style={{ width: '100%', accentColor: '#F97316', marginBottom: 8, cursor: 'pointer' }}
               />
-              <div className="flex justify-between text-text-muted text-xs font-mono mb-8">
+              <div className="flex justify-between mb-8" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
                 <span>1h</span><span>5h (avg)</span><span>10h</span><span>14h</span>
               </div>
               <div className="flex gap-3">
@@ -123,8 +123,8 @@ export default function OnboardingPage() {
 
           {step === 3 && (
             <div>
-              <h2 className="text-lg font-medium text-text-primary mb-2 font-mono">Target score</h2>
-              <p className="text-text-muted text-sm mb-6">What score are you aiming for? GATE is out of 100. (Optional — skip to continue.)</p>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'rgba(255,255,255,0.9)', marginBottom: 8 }}>Target score</h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 24 }}>What score are you aiming for? GATE is out of 100. (Optional — skip to continue.)</p>
               <label className="label">Target Score (out of 100)</label>
               <input
                 type="number"
@@ -145,14 +145,14 @@ export default function OnboardingPage() {
 
           {step === 4 && (
             <div className="text-center">
-              <div className="w-12 h-12 bg-accent-green/10 border border-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-accent-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div style={{ width: 48, height: 48, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg style={{ width: 24, height: 24, color: '#34D399' }} fill="none" viewBox="0 0 24 24" stroke="#34D399" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-lg font-medium text-text-primary mb-3 font-mono">You're set up.</h2>
-              <p className="text-text-secondary text-sm leading-relaxed mb-8">
-                Your tracker is empty — go to <strong className="text-text-primary">Subjects</strong> to define your plan for each subject, and to <strong className="text-text-primary">Calendar</strong> to mark your study days.
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'rgba(255,255,255,0.9)', marginBottom: 12 }}>You're set up.</h2>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, lineHeight: 1.6, marginBottom: 32 }}>
+                Your tracker is empty — go to <strong style={{ color: 'rgba(255,255,255,0.9)' }}>Subjects</strong> to define your plan for each subject, and to <strong style={{ color: 'rgba(255,255,255,0.9)' }}>Calendar</strong> to mark your study days.
               </p>
               <div className="flex flex-col gap-3">
                 <button onClick={() => { handleFinish().then(() => navigate('/subjects')); }} className="btn-secondary py-2.5">Go to Subjects</button>
@@ -165,7 +165,7 @@ export default function OnboardingPage() {
           )}
         </div>
 
-        <p className="text-center text-text-muted text-xs mt-6 font-mono">
+        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.28)', fontSize: 11, marginTop: 24, fontFamily: 'var(--font-mono)' }}>
           A tool is only as good as how honestly you use it.
         </p>
       </div>
