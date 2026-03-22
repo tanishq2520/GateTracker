@@ -44,11 +44,11 @@ export default function AchievementsPage() {
   }
 
   return (
-    <div className="ach-page">
-      <h1 className="ach-title">Achievements</h1>
+    <div style={{ maxWidth: 800, margin: '0 auto', paddingBottom: 40, position: 'relative', zIndex: 1 }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.02em', marginBottom: 24 }}>Achievements</h1>
 
       {/* Level + XP */}
-      <section className="card ach-section">
+      <section className="liquid-glass ach-section" style={{ borderRadius: 16, padding: '24px', marginBottom: 16 }}>
         <h2 className="ach-section-title">Level Progress</h2>
         <Levelbar
           totalXP={totalXP} level={level} levelName={levelName}
@@ -66,7 +66,7 @@ export default function AchievementsPage() {
       </section>
 
       {/* Streak stats */}
-      <section className="card ach-section">
+      <section className="liquid-glass ach-section" style={{ borderRadius: 16, padding: '24px', marginBottom: 16 }}>
         <h2 className="ach-section-title">Study Streak</h2>
         <div className="ach-streak-stats">
           <div className="ach-streak-stat">
@@ -85,7 +85,7 @@ export default function AchievementsPage() {
       </section>
 
       {/* Badge trophy case */}
-      <section className="card ach-section">
+      <section className="liquid-glass ach-section" style={{ borderRadius: 16, padding: '24px', marginBottom: 16 }}>
         <h2 className="ach-section-title">
           Badges — {earnedBadges.length} / {BADGE_DEFS.length} earned
         </h2>
@@ -93,7 +93,7 @@ export default function AchievementsPage() {
       </section>
 
       {/* XP History */}
-      <section className="card ach-section">
+      <section className="liquid-glass ach-section" style={{ borderRadius: 16, padding: '24px', marginBottom: 16 }}>
         <h2 className="ach-section-title">XP History (last 20)</h2>
         {xpLog.length === 0 ? (
           <p className="ach-empty">No XP events yet. Start studying!</p>

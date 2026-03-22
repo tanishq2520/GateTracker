@@ -42,21 +42,22 @@ const fieldValueStyle = {
 
 const inputStyle = {
   width: '100%',
-  background: '#3C3733',
-  border: '1px solid #57534E',
-  color: '#FAFAF9',
-  borderRadius: 6,
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  color: 'rgba(255,255,255,0.9)',
+  borderRadius: 8,
   padding: '10px 12px',
-  fontFamily: 'DM Mono, monospace',
+  fontFamily: 'var(--font-body)',
   fontSize: 12,
   outline: 'none',
+  transition: 'border-color 0.2s',
 };
 
 const iconButtonStyle = {
-  border: '1px solid #57534E',
+  border: '1px solid rgba(255,255,255,0.12)',
   borderRadius: 6,
-  background: '#3C3733',
-  color: '#A8A29E',
+  background: 'rgba(255,255,255,0.06)',
+  color: 'rgba(255,255,255,0.55)',
   width: 28,
   height: 28,
   display: 'inline-flex',
@@ -475,24 +476,25 @@ export default function ProfilePanel({ open, onClose }) {
         position: 'fixed',
         inset: 0,
         zIndex: 60,
-        background: 'rgba(12, 10, 9, 0.58)',
+        background: 'rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'flex-start',
       }}
       onMouseDown={onClose}
     >
       <div
+        className="liquid-glass-strong"
         onMouseDown={(event) => event.stopPropagation()}
         style={{
           width: 'min(320px, calc(100vw - 32px))',
-          marginLeft: typeof window !== 'undefined' && window.innerWidth >= 768 ? 236 : 16,
-          marginTop: 20,
-          background: '#292524',
-          border: '1px solid #44403C',
-          borderRadius: 12,
+          marginLeft: 16,
+          marginTop: 68,
+          borderRadius: 16,
           padding: 24,
           boxShadow: '0 24px 80px rgba(0, 0, 0, 0.42)',
-          maxHeight: 'calc(100vh - 40px)',
+          maxHeight: 'calc(100vh - 80px)',
           overflowY: 'auto',
         }}
       >
@@ -643,7 +645,7 @@ export default function ProfilePanel({ open, onClose }) {
           </div>
         </div>
 
-        <section style={{ borderTop: '1px solid #44403C', paddingTop: 2 }}>
+        <section style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 2 }}>
           <div style={sectionHeadingStyle}>Profile</div>
           <EditableRow
             label="Age"
@@ -663,7 +665,7 @@ export default function ProfilePanel({ open, onClose }) {
           />
         </section>
 
-        <section style={{ borderTop: '1px solid #44403C', paddingTop: 2, marginTop: 6 }}>
+        <section style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 2, marginTop: 6 }}>
           <div style={sectionHeadingStyle}>GATE Settings</div>
           <EditableRow
             label="Exam Date"
@@ -719,7 +721,7 @@ export default function ProfilePanel({ open, onClose }) {
           </div>
         </section>
 
-        <section style={{ borderTop: '1px solid #44403C', paddingTop: 2, marginTop: 14 }}>
+        <section style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 2, marginTop: 14 }}>
           <div style={sectionHeadingStyle}>Account</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {isEmailUser && (
@@ -728,9 +730,9 @@ export default function ProfilePanel({ open, onClose }) {
                 onClick={handleResetPassword}
                 style={{
                   ...actionButtonStyle,
-                  background: '#3C3733',
-                  color: '#FAFAF9',
-                  border: '1px solid #57534E',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: 'rgba(255,255,255,0.8)',
+                  border: '1px solid rgba(255,255,255,0.12)',
                 }}
               >
                 Reset Password
@@ -741,9 +743,9 @@ export default function ProfilePanel({ open, onClose }) {
               onClick={handleSignOut}
               style={{
                 ...actionButtonStyle,
-                background: '#3C3733',
-                color: '#EF4444',
-                border: '1px solid #EF4444',
+                background: 'rgba(248,113,113,0.08)',
+                color: '#F87171',
+                border: '1px solid rgba(248,113,113,0.25)',
               }}
             >
               Sign Out
@@ -751,7 +753,7 @@ export default function ProfilePanel({ open, onClose }) {
           </div>
         </section>
 
-        <section style={{ borderTop: '1px solid #44403C', paddingTop: 2, marginTop: 18 }}>
+        <section style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 2, marginTop: 18 }}>
           <div style={{ color: '#A8A29E', fontFamily: 'DM Mono, monospace', fontSize: 11, marginTop: 16 }}>
             {'v1.0.0 \u00B7 Built for GATE CS'}
           </div>

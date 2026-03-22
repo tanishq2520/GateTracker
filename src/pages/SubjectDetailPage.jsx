@@ -11,29 +11,124 @@ function SectionHeader({ children }) {
   return <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3 pb-2 border-b border-border">{children}</h2>;
 }
 
-function UnitRow({ unit, subjectId, onMarkDone }) {
-  const today = todayISO();
+// canUndo: returns true only if the unit was marked done TODAY
+function canUndo(unit) {
+  if (!unit.done || !unit.doneOn) return false;
+  const doneDate = unit.doneOn.split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  return doneDate === today;
+}
+
+function UnitRow({ unit, onMarkDone, onUnmark, onEdit, onRemove, isEditing, editDraft, onDraftChange, onSave, onCancelEdit }) {
   const isPast = unit.plannedDate && isPastISO(unit.plannedDate);
   const isToday = unit.plannedDate && isTodayISO(unit.plannedDate);
   const isMissed = isPast && !unit.done;
+  const undoable = canUndo(unit);
+
+  // Tooltip text for locked done checkbox
+  const lockedTooltip = unit.done && !undoable && unit.doneOn
+    ? `Completed on ${formatDate(unit.doneOn)} — cannot undo`
+    : undefined;
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') onSave();
+    if (e.key === 'Escape') onCancelEdit();
+  };
+
+  if (isEditing) {
+    return (
+      <div
+        className="flex items-center gap-2 py-3 border-b border-border/50 last:border-0"
+        onBlur={e => {
+          // Only save when focus leaves the entire row (not when jumping between inputs)
+          if (!e.currentTarget.contains(e.relatedTarget)) onSave();
+        }}
+      >
+        {/* Spacer matching checkbox width */}
+        <div className="w-4 h-4 flex-shrink-0" />
+        <input
+          autoFocus
+          value={editDraft.name}
+          onChange={e => onDraftChange({ ...editDraft, name: e.target.value })}
+          onKeyDown={handleKeyDown}
+          placeholder="Unit name"
+          className="input flex-1 text-sm py-1 h-7"
+        />
+        <input
+          type="number"
+          value={editDraft.totalTopics}
+          onChange={e => onDraftChange({ ...editDraft, totalTopics: parseInt(e.target.value) || 0 })}
+          onKeyDown={handleKeyDown}
+          title="Topics"
+          className="input w-16 text-sm py-1 h-7 text-center"
+        />
+        <input
+          type="number"
+          value={editDraft.lecturesNeeded}
+          onChange={e => onDraftChange({ ...editDraft, lecturesNeeded: parseInt(e.target.value) || 0 })}
+          onKeyDown={handleKeyDown}
+          title="Lectures"
+          className="input w-16 text-sm py-1 h-7 text-center"
+        />
+        <button
+          onMouseDown={e => { e.preventDefault(); onSave(); }}
+          className="text-accent-green text-xs hover:text-accent-green/80 transition-colors px-1 flex-shrink-0"
+          title="Save"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+        </button>
+        <button
+          onMouseDown={e => { e.preventDefault(); onCancelEdit(); }}
+          className="text-text-muted text-xs hover:text-accent-red transition-colors px-1 flex-shrink-0"
+          title="Cancel"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex items-center gap-3 py-3 border-b border-border/50 last:border-0 ${isMissed ? 'opacity-60' : ''}`}>
-      <button
-        onClick={() => !unit.done && !isMissed && onMarkDone(unit.id)}
-        disabled={unit.done || isMissed}
-        className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
-          unit.done ? 'bg-accent-green border-accent-green text-white' :
-          isMissed ? 'border-accent-red/50 cursor-not-allowed' :
-          'border-border hover:border-accent-blue cursor-pointer'
-        }`}
-      >
-        {unit.done && <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-      </button>
+    <div className={`flex items-center gap-3 py-3 border-b border-border/50 last:border-0 group ${isMissed ? 'opacity-60' : ''}`}>
+      {/* Checkbox */}
+      {unit.done && !undoable ? (
+        // Locked done checkbox — disabled with tooltip
+        <button
+          disabled
+          title={lockedTooltip}
+          className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center bg-accent-green border-accent-green text-white cursor-not-allowed"
+        >
+          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+        </button>
+      ) : unit.done && undoable ? (
+        // Undoable done checkbox — clickable
+        <button
+          onClick={() => onUnmark(unit.id)}
+          title="Click to undo completion"
+          className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center bg-accent-green border-accent-green text-white cursor-pointer hover:bg-accent-green/70 hover:border-accent-green/70 transition-colors"
+        >
+          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+        </button>
+      ) : (
+        // Normal incomplete checkbox
+        <button
+          onClick={() => !isMissed && onMarkDone(unit.id)}
+          disabled={isMissed}
+          className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
+            isMissed ? 'border-accent-red/50 cursor-not-allowed' : 'border-border hover:border-accent-blue cursor-pointer'
+          }`}
+        />
+      )}
 
+      {/* Name + meta */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`text-sm ${unit.done ? 'text-text-secondary line-through' : 'text-text-primary'}`}>
+          {unit.done && (
+            <svg className="w-3 h-3 text-accent-green flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+          <span className={`text-sm truncate ${unit.done ? 'text-text-muted' : 'text-text-primary'}`}>
             {unit.name || `Unit ${unit.id}`}
           </span>
           {isMissed && <span className="text-accent-red text-xs font-mono">Missed</span>}
@@ -46,9 +141,31 @@ function UnitRow({ unit, subjectId, onMarkDone }) {
             <span className="text-text-muted text-xs">{formatDate(unit.plannedDate)}</span>
           )}
           {unit.done && unit.doneOn && (
-            <span className="text-accent-green text-xs">Done {formatDate(unit.doneOn, 'MMM d')}</span>
+            <span className="text-accent-green text-xs">Done {formatDate(unit.doneOn)}</span>
           )}
         </div>
+      </div>
+
+      {/* Action buttons — always visible */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <button
+          onClick={() => onEdit(unit)}
+          title="Edit unit"
+          className="w-6 h-6 flex items-center justify-center text-text-muted hover:text-accent-blue transition-colors rounded opacity-0 group-hover:opacity-100"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.5-6.5a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-.707.464l-3.536.707.707-3.536a2 2 0 01.464-.707z" />
+          </svg>
+        </button>
+        <button
+          onClick={() => onRemove(unit.id)}
+          title="Remove unit"
+          className="w-6 h-6 flex items-center justify-center text-text-muted hover:text-accent-red transition-colors rounded opacity-0 group-hover:opacity-100"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -72,6 +189,10 @@ export default function SubjectDetailPage() {
   const [newUnit, setNewUnit] = useState({ name: '', totalTopics: 0, lecturesNeeded: 0 });
   const [showAddUnit, setShowAddUnit] = useState(false);
   const notesTimer = useRef(null);
+
+  // Inline unit editing state
+  const [editingUnitId, setEditingUnitId] = useState(null);
+  const [editDraft, setEditDraft] = useState({ name: '', totalTopics: 0, lecturesNeeded: 0 });
 
   useEffect(() => {
     if (subject) setLocalNotes(subject.notes || '');
@@ -115,6 +236,38 @@ export default function SubjectDetailPage() {
     const result = await markUnitDone(uid, id, unitId);
     if (result.success) showToast('Unit marked as done.', 'success');
     else showToast(result.message || 'Cannot mark unit done.', 'error', 7000);
+  };
+
+  const handleUnmarkUnitDone = async (unitId) => {
+    const updatedUnits = (subject.units || []).map(u =>
+      u.id === unitId ? { ...u, done: false, doneOn: null } : u
+    );
+    await handleFieldUpdate('units', updatedUnits);
+    showToast('Unit completion undone.', 'success');
+  };
+
+  const handleStartEditUnit = (unit) => {
+    setEditingUnitId(unit.id);
+    setEditDraft({ name: unit.name || '', totalTopics: unit.totalTopics || 0, lecturesNeeded: unit.lecturesNeeded || 0 });
+  };
+
+  const handleSaveUnitEdit = async () => {
+    if (!editingUnitId) return;
+    const updatedUnits = (subject.units || []).map(u =>
+      u.id === editingUnitId ? { ...u, ...editDraft } : u
+    );
+    setEditingUnitId(null);
+    await handleFieldUpdate('units', updatedUnits);
+  };
+
+  const handleCancelUnitEdit = () => {
+    setEditingUnitId(null);
+  };
+
+  const handleRemoveUnit = async (unitId) => {
+    const updatedUnits = (subject.units || []).filter(u => u.id !== unitId);
+    await handleFieldUpdate('units', updatedUnits);
+    showToast('Unit removed.', 'success');
   };
 
   const handleMarkRevisionDone = async (revId) => {
@@ -242,7 +395,19 @@ export default function SubjectDetailPage() {
           <p className="text-text-muted text-sm text-center py-4">No units added. Click "+ Add Unit" to start.</p>
         )}
         {units.map((unit) => (
-          <UnitRow key={unit.id} unit={unit} subjectId={id} onMarkDone={handleMarkUnitDone} />
+          <UnitRow
+            key={unit.id}
+            unit={unit}
+            onMarkDone={handleMarkUnitDone}
+            onUnmark={handleUnmarkUnitDone}
+            onEdit={handleStartEditUnit}
+            onRemove={handleRemoveUnit}
+            isEditing={editingUnitId === unit.id}
+            editDraft={editDraft}
+            onDraftChange={setEditDraft}
+            onSave={handleSaveUnitEdit}
+            onCancelEdit={handleCancelUnitEdit}
+          />
         ))}
 
         {showAddUnit ? (
@@ -378,3 +543,5 @@ export default function SubjectDetailPage() {
     </div>
   );
 }
+
+// hi am from vs  , and me from antigravity

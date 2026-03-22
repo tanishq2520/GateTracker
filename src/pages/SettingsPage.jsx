@@ -96,121 +96,135 @@ export default function SettingsPage() {
   };
 
 
+  const glassInput = {
+    display: 'block',
+    width: '100%',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: 8,
+    padding: '9px 12px',
+    fontSize: 13,
+    fontFamily: 'var(--font-body)',
+    color: 'rgba(255,255,255,0.9)',
+    outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  const sectionHdr = {
+    fontSize: 10,
+    fontFamily: 'var(--font-body)',
+    fontWeight: 500,
+    color: 'rgba(255,255,255,0.35)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.12em',
+    marginBottom: 16,
+  };
+
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-xl font-medium text-text-primary font-mono mb-6">Settings</h1>
+    <div style={{ maxWidth: 680, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.02em', marginBottom: 28 }}>Settings</h1>
 
       {/* GATE Configuration */}
-      <section className="card mb-4">
-        <h2 className="text-sm font-mono font-medium text-text-primary mb-4 uppercase tracking-wider">GATE Configuration</h2>
-        <div className="space-y-4">
+      <div className="liquid-glass" style={{ borderRadius: 16, padding: '24px', marginBottom: 16 }}>
+        <h2 style={sectionHdr}>GATE Configuration</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label className="label">GATE Exam Date</label>
-            <input type="date" value={form.gateExamDate} onChange={e => setForm(f => ({ ...f, gateExamDate: e.target.value }))} className="input" />
+            <label style={{ display: 'block', ...sectionHdr, marginBottom: 6 }}>GATE Exam Date</label>
+            <input type="date" value={form.gateExamDate} onChange={e => setForm(f => ({ ...f, gateExamDate: e.target.value }))} style={glassInput} />
           </div>
           <div>
-            <label className="label">Target Score (out of 100)</label>
-            <input type="number" value={form.targetScore} onChange={e => setForm(f => ({ ...f, targetScore: e.target.value }))} placeholder="e.g. 65" min={0} max={100} className="input" />
+            <label style={{ display: 'block', ...sectionHdr, marginBottom: 6 }}>Target Score (out of 100)</label>
+            <input type="number" value={form.targetScore} onChange={e => setForm(f => ({ ...f, targetScore: e.target.value }))} placeholder="e.g. 65" min={0} max={100} style={glassInput} />
           </div>
           <div>
-            <label className="label">Daily Study Target — {form.dailyHourTarget}h/day</label>
-            <input type="range" min={1} max={14} value={form.dailyHourTarget} onChange={e => setForm(f => ({ ...f, dailyHourTarget: parseInt(e.target.value) }))} className="w-full accent-accent-blue mt-1" />
+            <label style={{ display: 'block', ...sectionHdr, marginBottom: 6 }}>Daily Study Target — {form.dailyHourTarget}h/day</label>
+            <input type="range" min={1} max={14} value={form.dailyHourTarget} onChange={e => setForm(f => ({ ...f, dailyHourTarget: parseInt(e.target.value) }))} style={{ width: '100%', accentColor: '#F97316', marginTop: 4 }} />
           </div>
           <div>
-            <label className="label">Prep Start Date (for Day N counter)</label>
-            <input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} className="input" />
+            <label style={{ display: 'block', ...sectionHdr, marginBottom: 6 }}>Prep Start Date (for Day N counter)</label>
+            <input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} style={glassInput} />
           </div>
-          <button onClick={handleSave} disabled={saving} className="btn-primary">
+          <button onClick={handleSave} disabled={saving} style={{ background: 'rgba(249,115,22,0.85)', backdropFilter: 'blur(8px)', color: '#fff', border: '1px solid rgba(249,115,22,0.4)', borderRadius: 8, padding: '9px 20px', fontFamily: 'var(--font-body)', fontSize: 13, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, alignSelf: 'flex-start' }}>
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
-      </section>
+      </div>
 
       {/* Notifications */}
-      <section className="card mb-4">
-        <h2 className="text-sm font-mono font-medium text-text-primary mb-4 uppercase tracking-wider">Notifications</h2>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+      <div className="liquid-glass" style={{ borderRadius: 16, padding: '24px', marginBottom: 16 }}>
+        <h2 style={sectionHdr}>Notifications</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <div className="text-text-primary text-sm">Daily Reminder</div>
-              <div className="text-text-muted text-xs">Morning reminder shows today's planned events</div>
+              <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontFamily: 'var(--font-body)' }}>Daily Reminder</div>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'var(--font-body)', marginTop: 2 }}>Morning reminder shows today's planned events</div>
             </div>
             <button
               onClick={handleNotifToggle}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${notifEnabled ? 'bg-accent-blue' : 'bg-border'}`}
+              style={{ position: 'relative', display: 'inline-flex', height: 20, width: 36, alignItems: 'center', borderRadius: 9999, transition: 'background 0.2s', background: notifEnabled ? '#F97316' : 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer' }}
             >
-              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${notifEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+              <span style={{ display: 'inline-block', width: 14, height: 14, borderRadius: '50%', background: '#fff', transition: 'transform 0.2s', transform: notifEnabled ? 'translateX(18px)' : 'translateX(2px)' }} />
             </button>
           </div>
           {notifEnabled && (
             <div>
-              <label className="label">Reminder Time</label>
-              <input type="time" value={notifTime} onChange={e => setNotifTime(e.target.value)} className="input" />
+              <label style={{ display: 'block', ...sectionHdr, marginBottom: 6 }}>Reminder Time</label>
+              <input type="time" value={notifTime} onChange={e => setNotifTime(e.target.value)} style={glassInput} />
             </div>
           )}
         </div>
-      </section>
+      </div>
 
       {/* Data Management */}
-      <section className="card mb-4">
-        <h2 className="text-sm font-mono font-medium text-text-primary mb-4 uppercase tracking-wider">Data Management</h2>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between py-2">
+      <div className="liquid-glass" style={{ borderRadius: 16, padding: '24px', marginBottom: 16 }}>
+        <h2 style={sectionHdr}>Data Management</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
             <div>
-              <div className="text-text-primary text-sm">Firebase Sync</div>
-              <div className="text-text-muted text-xs">Connected to Firestore</div>
+              <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontFamily: 'var(--font-body)' }}>Firebase Sync</div>
+              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'var(--font-body)', marginTop: 2 }}>Connected to Firestore</div>
             </div>
-            <span className="flex items-center gap-1.5 text-accent-green text-xs font-mono">
-              <span className="w-1.5 h-1.5 bg-accent-green rounded-full" />
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#34D399', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
+              <span style={{ width: 6, height: 6, background: '#34D399', borderRadius: '50%' }} />
               Online
             </span>
           </div>
-          <div className="py-2 border-t border-border">
-            <div className="text-text-secondary text-xs font-mono mb-1">Local Device ID</div>
-            <div className="text-text-muted text-xs font-data break-all">{uid}</div>
+          <div style={{ padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'var(--font-mono)', marginBottom: 4 }}>Local Device ID</div>
+            <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>{uid}</div>
           </div>
-          <div className="flex flex-col gap-3 pt-2">
-            <button onClick={handleExport} disabled={exporting} className="btn-secondary text-left">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={handleExport} disabled={exporting} className="liquid-glass" style={{ color: 'rgba(255,255,255,0.7)', padding: '9px 16px', borderRadius: 8, fontFamily: 'var(--font-body)', fontSize: 13, cursor: 'pointer', border: 'none', textAlign: 'left' }}>
               {exporting ? 'Exporting...' : 'Export All Data as JSON'}
             </button>
             <button
               onClick={handleSignOut}
-              style={{
-                background: '#3C3733',
-                color: '#EF4444',
-                border: '1px solid #EF4444',
-                borderRadius: 6,
-                padding: '8px 16px',
-                cursor: 'pointer',
-                fontFamily: 'DM Mono, monospace',
-                fontSize: 12,
-                textAlign: 'left',
-              }}
+              style={{ background: 'rgba(248,113,113,0.08)', color: '#F87171', border: '1px solid rgba(248,113,113,0.25)', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, textAlign: 'left' }}
             >
               Sign Out
             </button>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Reset */}
-      <section className="card border-accent-red/20">
-        <h2 className="text-sm font-mono font-medium text-accent-red mb-4 uppercase tracking-wider">Danger Zone</h2>
-        <p className="text-text-secondary text-sm mb-4">
+      <div className="liquid-glass" style={{ borderRadius: 16, padding: '24px', border: '1px solid rgba(248,113,113,0.15)' }}>
+        <h2 style={{ ...sectionHdr, color: '#F87171' }}>Danger Zone</h2>
+        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, fontFamily: 'var(--font-body)', marginBottom: 16 }}>
           This clears all local cached data. Your Firestore data is unaffected.
         </p>
-        <label className="label">Type RESET to confirm</label>
-        <div className="flex gap-3">
+        <label style={{ display: 'block', ...sectionHdr, marginBottom: 6 }}>Type RESET to confirm</label>
+        <div style={{ display: 'flex', gap: 12 }}>
           <input
             type="text"
             value={resetConfirm}
             onChange={e => setResetConfirm(e.target.value)}
             placeholder='Type "RESET"'
-            className="input"
+            style={{ ...glassInput, flex: 1 }}
           />
-          <button onClick={handleReset} className="btn-danger whitespace-nowrap">Reset Cache</button>
+          <button onClick={handleReset} style={{ background: 'rgba(248,113,113,0.12)', color: '#F87171', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, whiteSpace: 'nowrap' }}>Reset Cache</button>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

@@ -10,27 +10,17 @@ import { auth } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 
 const inputStyle = {
-  background: '#3C3733',
-  border: '1px solid #57534E',
-  color: '#FAFAF9',
-  borderRadius: 6,
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  color: 'rgba(255,255,255,0.9)',
+  borderRadius: 8,
   padding: '10px 14px',
   width: '100%',
-  fontFamily: 'DM Mono, monospace',
-  fontSize: 12,
+  fontFamily: 'var(--font-body)',
+  fontSize: 13,
   outline: 'none',
   boxSizing: 'border-box',
-};
-
-const buttonStyle = {
-  width: '100%',
-  borderRadius: 6,
-  padding: '10px 14px',
-  fontFamily: 'DM Mono, monospace',
-  fontSize: 12,
-  cursor: 'pointer',
-  border: 'none',
-  transition: 'opacity 0.2s ease',
+  transition: 'border-color 0.2s',
 };
 
 const GoogleIcon = () => (
@@ -61,20 +51,9 @@ const LoginPage = () => {
   const handleEmailAuth = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!email || !password) {
-      setError('Please fill all fields.');
-      return;
-    }
-    if (mode === 'signup' && password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-    if (mode === 'signup' && password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-
+    if (!email || !password) { setError('Please fill all fields.'); return; }
+    if (mode === 'signup' && password !== confirmPassword) { setError('Passwords do not match.'); return; }
+    if (mode === 'signup' && password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     setLoading(true);
     try {
       if (mode === 'login') {
@@ -105,52 +84,76 @@ const LoginPage = () => {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Google sign-in failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const focusBorder = (e) => {
-    e.currentTarget.style.borderColor = '#F97316';
-  };
-
-  const blurBorder = (e) => {
-    e.currentTarget.style.borderColor = '#57534E';
-  };
+  const focusBorder = (e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; };
+  const blurBorder  = (e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#1C1917',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 24,
-      boxSizing: 'border-box',
-    }}>
-      <div style={{
-        background: '#292524',
-        border: '1px solid #44403C',
-        borderRadius: 12,
-        padding: 40,
-        width: '100%',
-        maxWidth: 400,
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
         boxSizing: 'border-box',
-      }}>
-        <div style={{ color: '#F97316', fontFamily: 'DM Mono, monospace', fontSize: 13, letterSpacing: '0.12em', marginBottom: 8 }}>
-          GATE CS TRACKER
+      }}
+    >
+      <div
+        className="liquid-glass-strong animate-fade-rise"
+        style={{
+          borderRadius: 20,
+          padding: 40,
+          width: '100%',
+          maxWidth: 400,
+          boxSizing: 'border-box',
+        }}
+      >
+        {/* Title */}
+        <div
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 32,
+            color: 'rgba(255,255,255,0.95)',
+            letterSpacing: '-0.02em',
+            marginBottom: 4,
+          }}
+        >
+          GATE CS Tracker
         </div>
-        <div style={{ color: '#57534E', fontFamily: 'DM Mono, monospace', fontSize: 11, marginBottom: 28 }}>
+        <div
+          style={{
+            color: 'rgba(255,255,255,0.35)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 12,
+            marginBottom: 28,
+          }}
+        >
           Your honest study companion
         </div>
 
-        <div style={{ color: '#FAFAF9', fontFamily: 'DM Sans, sans-serif', fontSize: 20, fontWeight: 600, marginBottom: 20 }}>
+        {/* Mode label */}
+        <div
+          style={{
+            color: 'rgba(255,255,255,0.8)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 16,
+            fontWeight: 500,
+            marginBottom: 18,
+          }}
+        >
           {mode === 'login' ? 'Welcome back' : 'Create account'}
         </div>
 
-        <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <input
             type="email"
             placeholder="Email"
@@ -180,76 +183,98 @@ const LoginPage = () => {
               style={inputStyle}
             />
           )}
-
           <button
             type="submit"
             disabled={loading}
             style={{
-              ...buttonStyle,
-              background: '#F97316',
-              color: '#1C1917',
-              fontWeight: 700,
+              width: '100%',
+              borderRadius: 8,
+              padding: '10px 14px',
+              fontFamily: 'var(--font-body)',
+              fontSize: 13,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              border: '1px solid rgba(249,115,22,0.4)',
+              background: 'rgba(249,115,22,0.85)',
+              backdropFilter: 'blur(8px)',
+              color: '#fff',
+              fontWeight: 600,
               marginTop: 4,
               opacity: loading ? 0.7 : 1,
+              transition: 'opacity 0.2s',
             }}
           >
             {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          color: '#57534E',
-          fontFamily: 'DM Mono, monospace',
-          fontSize: 11,
-          margin: '18px 0',
-        }}>
-          <div style={{ flex: 1, height: 1, background: '#44403C' }} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            color: 'rgba(255,255,255,0.2)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 11,
+            margin: '16px 0',
+          }}
+        >
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
           <span>or</span>
-          <div style={{ flex: 1, height: 1, background: '#44403C' }} />
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
         </div>
 
         <button
           type="button"
           onClick={handleGoogle}
           disabled={loading}
+          className="liquid-glass"
           style={{
-            ...buttonStyle,
-            background: '#3C3733',
-            color: '#FAFAF9',
-            border: '1px solid #57534E',
+            width: '100%',
+            borderRadius: 8,
+            padding: '10px 14px',
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            color: 'rgba(255,255,255,0.75)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 10,
             opacity: loading ? 0.7 : 1,
+            border: 'none',
           }}
         >
           <GoogleIcon />
           Continue with Google
         </button>
 
-        <div style={{ minHeight: 20, color: '#EF4444', fontFamily: 'DM Mono, monospace', fontSize: 11, marginTop: 14 }}>
-          {error}
-        </div>
+        {error && (
+          <div
+            style={{
+              color: '#F87171',
+              fontFamily: 'var(--font-body)',
+              fontSize: 11,
+              marginTop: 14,
+              minHeight: 16,
+            }}
+          >
+            {error}
+          </div>
+        )}
 
         <button
           type="button"
-          onClick={() => {
-            setMode((prev) => (prev === 'login' ? 'signup' : 'login'));
-            setError('');
-          }}
+          onClick={() => { setMode((p) => (p === 'login' ? 'signup' : 'login')); setError(''); }}
           style={{
             background: 'none',
             border: 'none',
             padding: 0,
             color: '#F97316',
-            fontFamily: 'DM Mono, monospace',
+            fontFamily: 'var(--font-body)',
             fontSize: 11,
             cursor: 'pointer',
-            marginTop: 12,
+            marginTop: 14,
+            display: 'block',
           }}
         >
           {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}

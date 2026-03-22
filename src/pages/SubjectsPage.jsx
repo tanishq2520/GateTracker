@@ -38,41 +38,47 @@ function getProgress(subject) {
 function SubjectCard({ subject }) {
   const progress = getProgress(subject);
   const statusKey = getSubjectStatus(subject);
+  const statusColors = {
+    not_started: 'rgba(255,255,255,0.28)',
+    in_progress: '#A78BFA',
+    completed: '#34D399',
+    overdue: '#F97316',
+  };
   return (
-    <div className="card group hover:border-accent-blue/40 transition-colors">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full shrink-0" style={{ background: subject.color }} />
-          <h3 className="text-text-primary font-medium text-sm">{subject.name}</h3>
+    <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px', transition: 'filter 0.2s' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: subject.color }} />
+          <h3 style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500 }}>{subject.name}</h3>
         </div>
-        <span className={`badge border ${STATUS_BADGE[statusKey]}`}>{STATUS_LABEL[statusKey]}</span>
+        <span style={{ fontSize: 10, color: statusColors[statusKey], fontFamily: 'var(--font-body)', background: `${statusColors[statusKey]}18`, padding: '3px 8px', borderRadius: 9999 }}>
+          {STATUS_LABEL[statusKey]}
+        </span>
       </div>
 
-      {/* Progress bar */}
-      <div className="progress-bar mb-1">
-        <div className="progress-fill" style={{ width: `${progress.percent}%`, background: subject.color }} />
+      <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 9999, overflow: 'hidden', marginBottom: 6 }}>
+        <div style={{ height: '100%', width: `${progress.percent}%`, background: subject.color, borderRadius: 9999 }} />
       </div>
-      <div className="flex items-center justify-between text-xs text-text-muted font-data mb-3">
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-mono)', marginBottom: 12 }}>
         <span>{progress.done}/{progress.total} units</span>
         <span>{progress.percent}%</span>
       </div>
 
       {subject.plannedEndDate && (
-        <div className="text-xs text-text-muted mb-3">
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 8, fontFamily: 'var(--font-body)' }}>
           Planned end: {formatDate(subject.plannedEndDate)}
         </div>
       )}
 
-      {/* Next revision */}
       {(() => {
         const upcoming = (subject.revisionSessions || []).find(r => !r.done && r.plannedDate);
         return upcoming ? (
-          <div className="text-xs text-accent-purple mb-3">Next revision: {formatDate(upcoming.plannedDate)}</div>
+          <div style={{ fontSize: 11, color: '#A78BFA', marginBottom: 8, fontFamily: 'var(--font-body)' }}>Next revision: {formatDate(upcoming.plannedDate)}</div>
         ) : null;
       })()}
 
-      <Link to={`/subjects/${subject.id}`} className="flex items-center justify-end gap-1 text-xs text-accent-blue hover:text-accent-blue/80 transition-colors mt-2">
-        Open <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+      <Link to={`/subjects/${subject.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4, fontSize: 12, color: '#F97316', textDecoration: 'none', marginTop: 8 }}>
+        Open <svg style={{ width: 12, height: 12 }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
       </Link>
     </div>
   );
@@ -80,12 +86,18 @@ function SubjectCard({ subject }) {
 
 function UnconfiguredCard({ name, color, onAdd }) {
   return (
-    <div className="card border-dashed opacity-50 hover:opacity-80 transition-opacity cursor-pointer" onClick={onAdd}>
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-3 h-3 rounded-full" style={{ background: color }} />
-        <h3 className="text-text-secondary text-sm">{name}</h3>
+    <div
+      className="liquid-glass"
+      style={{ borderRadius: 16, padding: '16px 18px', opacity: 0.6, cursor: 'pointer', transition: 'opacity 0.2s' }}
+      onClick={onAdd}
+      onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+      onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8 }}>
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: color }} />
+        <h3 style={{ color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-body)', fontSize: 13 }}>{name}</h3>
       </div>
-      <p className="text-text-muted text-xs">Not configured. Click to add.</p>
+      <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, fontFamily: 'var(--font-body)' }}>Not configured. Click to add.</p>
     </div>
   );
 }
@@ -122,57 +134,57 @@ export default function SubjectsPage() {
   const unconfigured = DEFAULT_SUBJECTS.filter(s => !configuredNames.has(s.name.toLowerCase()));
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 className="text-xl font-medium text-text-primary font-mono">Subjects</h1>
-          <p className="text-text-muted text-sm mt-0.5">
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.02em' }}>Subjects</h1>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, fontFamily: 'var(--font-body)', marginTop: 4 }}>
             {configuredSubjects.length === 0
               ? 'No subjects configured yet.'
               : `${configuredSubjects.length} subject${configuredSubjects.length > 1 ? 's' : ''} configured`}
           </p>
         </div>
-        <button onClick={() => setShowAddForm(!showAddForm)} className="btn-secondary text-sm">
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          style={{ background: 'rgba(249,115,22,0.85)', backdropFilter: 'blur(8px)', color: '#fff', border: '1px solid rgba(249,115,22,0.4)', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: 13, cursor: 'pointer' }}
+        >
           + Custom Subject
         </button>
       </div>
 
-      {/* Custom add form */}
       {showAddForm && (
-        <div className="card mb-6">
-          <h3 className="text-sm font-mono font-medium text-text-primary mb-4">Add Custom Subject</h3>
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <label className="label">Subject Name</label>
-              <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. VLSI Design" className="input" />
+        <div className="liquid-glass" style={{ borderRadius: 16, padding: '20px', marginBottom: 24 }}>
+          <h3 style={{ fontSize: 13, fontFamily: 'var(--font-body)', fontWeight: 500, color: 'rgba(255,255,255,0.9)', marginBottom: 16 }}>Add Custom Subject</h3>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6, fontFamily: 'var(--font-body)' }}>Subject Name</label>
+              <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. VLSI Design" style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.9)', borderRadius: 8, padding: '8px 12px', fontFamily: 'var(--font-body)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label className="label">Color</label>
-              <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)} className="w-10 h-9 rounded-md border border-border bg-bg cursor-pointer" />
+              <label style={{ display: 'block', fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6, fontFamily: 'var(--font-body)' }}>Color</label>
+              <input type="color" value={newColor} onChange={e => setNewColor(e.target.value)} style={{ width: 40, height: 36, borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', cursor: 'pointer' }} />
             </div>
-            <button onClick={handleAddCustom} disabled={!newName.trim() || saving} className="btn-primary">Add</button>
-            <button onClick={() => setShowAddForm(false)} className="btn-secondary">Cancel</button>
+            <button onClick={handleAddCustom} disabled={!newName.trim() || saving} style={{ background: 'rgba(249,115,22,0.85)', color: '#fff', border: '1px solid rgba(249,115,22,0.4)', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: 13, cursor: 'pointer' }}>Add</button>
+            <button onClick={() => setShowAddForm(false)} className="liquid-glass" style={{ color: 'rgba(255,255,255,0.6)', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-body)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
           </div>
         </div>
       )}
 
-      {/* Configured subjects */}
       {configuredSubjects.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Configured ({configuredSubjects.length})</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-body)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>Configured ({configuredSubjects.length})</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
             {configuredSubjects.map(s => <SubjectCard key={s.id} subject={s} />)}
           </div>
         </div>
       )}
 
-      {/* Unconfigured pre-loaded subjects */}
       {unconfigured.length > 0 && (
         <div>
-          <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">
+          <h2 style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-body)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
             Add from GATE CS syllabus ({unconfigured.length} remaining)
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
             {unconfigured.map(s => (
               <UnconfiguredCard key={s.name} name={s.name} color={s.color} onAdd={() => handleAddDefault(s.name, s.color)} />
             ))}
@@ -180,13 +192,12 @@ export default function SubjectsPage() {
         </div>
       )}
 
-      {/* Empty state */}
       {configuredSubjects.length === 0 && (
-        <div className="text-center py-16">
-          <div className="text-text-muted text-sm max-w-sm mx-auto">
-            <p className="mb-2">No subjects set up.</p>
+        <div style={{ textAlign: 'center', padding: '64px 0' }}>
+          <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 13, maxWidth: 360, margin: '0 auto', fontFamily: 'var(--font-body)' }}>
+            <p style={{ marginBottom: 8 }}>No subjects set up.</p>
             <p>Click a subject above to add it, or use "+ Custom Subject" to add your own.</p>
-            <p className="mt-2 text-text-muted/60">Set its units, lectures per day, and target dates.</p>
+            <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.18)' }}>Set its units, lectures per day, and target dates.</p>
           </div>
         </div>
       )}

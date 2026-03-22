@@ -80,10 +80,8 @@ export default function Sidebar() {
   return (
     <>
       <aside
-        className="hidden md:flex shrink-0 border-r border-border"
+        className="hidden md:flex md:flex-col shrink-0 border-r border-border"
         style={{
-          display: 'flex',
-          flexDirection: 'column',
           height: '100vh',
           width: '220px',
           background: '#292524',

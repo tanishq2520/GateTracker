@@ -107,9 +107,7 @@ export default function CalendarPage() {
     || getEventsForDate(date).find(event => event.source === 'day_type')?.type
     || null;
   const getCellLabel = (date) => {
-    const primaryEvent = getVisibleEventsForDate(date)[0];
-    if (primaryEvent?.label) return primaryEvent.label;
-
+    // Always prefer live dailyLogs task data — calendarEvents labels can be stale
     const tasks = getTasksForDate(date);
     if (tasks.length > 0) {
       const subjectNames = [...new Set(
@@ -123,6 +121,10 @@ export default function CalendarPage() {
       if (subjectNames.length > 2) return `${subjectNames[0]} +${subjectNames.length - 1} more`;
       return tasks[0]?.description || 'Study';
     }
+
+    // No tasks in dailyLogs — fall back to calendarEvent label (e.g. manually created events)
+    const primaryEvent = getVisibleEventsForDate(date)[0];
+    if (primaryEvent?.label) return primaryEvent.label;
 
     return formatDayTypeLabel(getExplicitDayTypeForDate(date));
   };
@@ -162,7 +164,11 @@ export default function CalendarPage() {
           source: 'log',
         };
       }
-      if (displayMap[date] && !displayMap[date].label) {
+      if (displayMap[date] && hasTasks) {
+        // Tasks exist — always recalculate label from live data (overrides stale calendarEvent label)
+        displayMap[date].label = getCellLabel(date);
+        displayMap[date].color = getLogColor(date);
+      } else if (displayMap[date] && !displayMap[date].label) {
         displayMap[date].label = getCellLabel(date);
       }
       if (displayMap[date] && displayMap[date].source === 'log') {
@@ -194,6 +200,11 @@ export default function CalendarPage() {
     setModalMode('day-panel');
   };
 
+  // Returns true if a date is blocked by sem_exam
+  const isSemExamDate = (dateStr) => {
+    return getExplicitDayTypeForDate(dateStr) === 'sem_exam';
+  };
+
   // Bulk add logic
   const handleBulkPreview = () => {
     const { subjectId, startDate, endDate, days, tasks } = bulkForm;
@@ -201,14 +212,21 @@ export default function CalendarPage() {
       showToast('Please select subject, start date, and end date.', 'error');
       return;
     }
-    const dates = getDatesBetween(startDate, endDate, days);
-    if (dates.length === 0) {
+    const allDates = getDatesBetween(startDate, endDate, days);
+    if (allDates.length === 0) {
       showToast('No valid days found in this range for the selected weekdays.', 'error');
+      return;
+    }
+    // Filter out dates blocked by sem_exam
+    const dates = allDates.filter(d => !isSemExamDate(toISODateString(d)));
+    const skipped = allDates.length - dates.length;
+    if (dates.length === 0) {
+      showToast('All dates in this range are blocked by Sem Exam days.', 'error');
       return;
     }
     const subject = subjects[subjectId];
     const totalDailyHours = tasks.reduce((s, t) => s + t.estimatedHours, 0);
-    setBulkPreview({ dates, count: dates.length, subject, tasks, totalDailyHours });
+    setBulkPreview({ dates, count: dates.length, skipped, subject, tasks, totalDailyHours });
   };
 
   const handleBulkGenerate = async () => {
@@ -217,26 +235,29 @@ export default function CalendarPage() {
     try {
       const { subjectId } = bulkForm;
       const subject = subjects[subjectId];
-      // Attach the tasks array to the calendar event
-      const eventsToAdd = bulkPreview.dates.map(date => ({
-        date: toISODateString(date),
-        type: 'study',
-        subjectId,
-        label: subject?.name || '',
-        color: subject?.color || '#4F8EF7',
-        done: false,
-        status: 'planned',
-        tasks: (bulkPreview.tasks || []).map(task => ({
-          id: crypto.randomUUID(),
-          description: task.description,
+      // Attach the tasks array to the calendar event, skip sem_exam dates
+      const eventsToAdd = bulkPreview.dates
+        .filter(date => !isSemExamDate(toISODateString(date)))
+        .map(date => ({
+          date: toISODateString(date),
+          type: 'study',
           subjectId,
-          estimatedHours: Number(task.estimatedHours) || 0,
+          label: subject?.name || '',
+          color: subject?.color || '#4F8EF7',
           done: false,
-          doneAt: null,
-        })),
-      }));
+          status: 'planned',
+          tasks: (bulkPreview.tasks || []).map(task => ({
+            id: crypto.randomUUID(),
+            description: task.description,
+            subjectId,
+            estimatedHours: Number(task.estimatedHours) || 0,
+            done: false,
+            doneAt: null,
+          })),
+        }));
       await bulkAddEvents(uid, eventsToAdd);
-      showToast(`Added ${eventsToAdd.length} study days for ${subject?.name}.`, 'success');
+      const skippedMsg = bulkPreview.skipped > 0 ? ` (${bulkPreview.skipped} sem exam day${bulkPreview.skipped > 1 ? 's' : ''} skipped)` : '';
+      showToast(`Added ${eventsToAdd.length} study days for ${subject?.name}${skippedMsg}.`, 'success');
       setBulkOpen(false);
       setBulkPreview(null);
       setBulkForm({ subjectId: '', startDate: '', endDate: '', days: [1,2,3,4,5], tasks: [] });

@@ -36,10 +36,10 @@ const DEFAULT_GOALS = {
 };
 
 const LoadingScreen = () => (
-  <div style={{ minHeight: '100vh', background: '#1C1917', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+  <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
     <div style={{ textAlign: 'center' }}>
       <div style={{ width: 32, height: 32, border: '2px solid #F97316', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
-      <p style={{ color: '#A8A29E', fontSize: '0.8rem', fontFamily: 'DM Mono, monospace' }}>Initializing...</p>
+      <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>Initializing...</p>
     </div>
   </div>
 );
@@ -161,6 +161,27 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      {/* Global fullscreen video background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      >
+        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4" type="video/mp4" />
+      </video>
+      {/* Dark overlay for readability */}
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 0, pointerEvents: 'none' }} />
+
       <ToastContainer />
       <XPFloat />
       <BossBattle />

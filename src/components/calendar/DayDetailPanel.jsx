@@ -4,7 +4,7 @@
 // All mutations update local state instantly; Firestore writes run in background.
 
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import { doc, onSnapshot, query, setDoc, where, deleteDoc, getDocs, collection } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useGoalsStore } from '../../stores/useGoalsStore';
@@ -123,6 +123,36 @@ export default function DayDetailPanel({ date, onClose }) {
     });
   };
 
+  // ── SYNC calendarEvents docs to match remaining tasks ───────
+  // calendarEvents use nanoid() as doc ID, date is stored as a field.
+  // We must query by date field to find and update/delete the right docs.
+  const syncCalendarEvent = async (updatedTasks) => {
+    const { uid: u, date: d } = ctxRef.current;
+    const q = query(
+      collection(db, `users/${u}/calendarEvents`),
+      where('date', '==', d)
+    );
+    try {
+      const snap = await getDocs(q);
+      const studyDocs = snap.docs.filter(ds => ds.data().source !== 'day_type');
+      if (updatedTasks.length === 0) {
+        // No tasks left — delete all non-daytype calendarEvent docs for this date
+        await Promise.all(studyDocs.map(ds => deleteDoc(ds.ref)));
+      } else {
+        // Update label/color on the first study event doc to match remaining tasks
+        const firstSubjectId = updatedTasks[0]?.subjectId;
+        const sub = firstSubjectId ? subjects[firstSubjectId] : null;
+        const newLabel = sub?.name || updatedTasks[0]?.description || 'Study';
+        const newColor = sub?.color || '#4F8EF7';
+        await Promise.all(studyDocs.map(ds =>
+          setDoc(ds.ref, { label: newLabel, color: newColor }, { merge: true })
+        ));
+      }
+    } catch (err) {
+      console.error('syncCalendarEvent error', err);
+    }
+  };
+
   // ── TASK ACTIONS (all update local state immediately) ─────────
   const handleAdd = (e) => {
     e.preventDefault();
@@ -150,6 +180,7 @@ export default function DayDetailPanel({ date, onClose }) {
     setTasks(updated);
     if (!explicitDayTypeRef.current && updated.length === 0) setDayType(null);
     persist(updated);
+    syncCalendarEvent(updated);
   };
 
   const handleToggleDone = (id) => {
@@ -165,6 +196,7 @@ export default function DayDetailPanel({ date, onClose }) {
     setTasks([]);        // instant UI clear
     setConfirm(false);
     persist([]);         // background save
+    syncCalendarEvent([]);  // remove calendarEvents doc so cell goes empty
     onClose();
   };
 
@@ -353,7 +385,7 @@ export default function DayDetailPanel({ date, onClose }) {
                               <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
                           </select>
-                          <input type="number" step="0.5" min="0.1" value={editVals.estimatedHours} onChange={e=>setEditVals(v=>({...v,estimatedHours:e.target.value}))} style={{...S.input,width:60,textAlign:'center'}} placeholder="Hrs"/>
+                          <input type="number" step="any" min="0.01" value={editVals.estimatedHours} onChange={e=>setEditVals(v=>({...v,estimatedHours:e.target.value}))} style={{...S.input,width:60,textAlign:'center'}} placeholder="Hrs"/>
                         </div>
                         <div style={{display:'flex',gap:6}}>
                           <button onClick={saveEdit} style={{flex:1,background:'#84CC16',color:'#1C1917',border:'none',borderRadius:4,padding:'6px',fontFamily:'DM Mono,monospace',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
@@ -405,7 +437,12 @@ export default function DayDetailPanel({ date, onClose }) {
             </div>
 
             {/* ── Add Task Form ── */}
-            {canEdit && (
+            {canEdit && dayType === 'sem_exam' && (
+              <div style={{padding:'10px 12px',background:'#374151',border:'1px solid #6B728040',borderRadius:6,fontFamily:'DM Mono,monospace',fontSize:11,color:'#9CA3AF',textAlign:'center'}}>
+                🚫 Sem Exam day — tasks cannot be added
+              </div>
+            )}
+            {canEdit && dayType !== 'sem_exam' && (
               <form onSubmit={handleAdd} style={{display:'flex',flexDirection:'column',gap:8,padding:12,background:'#292524',border:'1px dashed #44403C',borderRadius:6}}>
                 <div style={{fontFamily:'DM Mono,monospace',fontSize:9,color:'#F97316',letterSpacing:'0.06em'}}>+ NEW TASK</div>
                 <input
@@ -424,12 +461,13 @@ export default function DayDetailPanel({ date, onClose }) {
                     ))}
                   </select>
                   <input
-                    type="number" step="0.5" min="0.1"
+                    type="number"
                     placeholder="Hrs"
                     value={form.estimatedHours}
                     onChange={e=>setForm(f=>({...f,estimatedHours:e.target.value}))}
                     style={{...S.input,width:64,textAlign:'center'}}
-                    required
+                    step="any"
+                    min="0.01"
                   />
                 </div>
                 <button
