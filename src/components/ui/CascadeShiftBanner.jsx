@@ -40,20 +40,20 @@ export default function CascadeShiftBanner() {
   const handleManual = () => dismissShift();
 
   return (
-    <div className="mx-6 mt-4 border border-accent-orange/30 bg-accent-orange/5 rounded-lg px-4 py-3">
+    <div style={{ margin: '16px 24px 0', border: '1px solid rgba(251,191,36,0.3)', background: 'rgba(251,191,36,0.06)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: 10, padding: '12px 16px' }}>
       <div className="flex items-start gap-3">
-        <span className="text-accent-orange mt-0.5 shrink-0">
+        <span style={{ color: '#FBBF24', marginTop: 2, flexShrink: 0 }}>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-text-primary text-sm font-medium">
+          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: 500 }}>
             {totalDays === 1
               ? `You missed ${formatDate(firstMissed, 'MMM d')}`
               : `You missed ${totalDays} days (${formatDate(firstMissed, 'MMM d')} – ${formatDate(lastMissed, 'MMM d')})`}
           </p>
-          <p className="text-text-secondary text-xs mt-0.5">
+          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, marginTop: 2 }}>
             Your schedule is {totalDays} day{totalDays > 1 ? 's' : ''} behind ideal. What do you want to do?
           </p>
         </div>
@@ -63,13 +63,13 @@ export default function CascadeShiftBanner() {
         <button
           onClick={handleShift}
           disabled={isShifting}
-          className="bg-accent-orange/20 border border-accent-orange/40 text-accent-orange text-xs px-3 py-1.5 rounded-md font-medium hover:bg-accent-orange/30 transition-colors disabled:opacity-50"
+          style={{ background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.35)', color: '#FBBF24', fontSize: 11, padding: '6px 12px', borderRadius: 6, fontWeight: 500, cursor: 'pointer', opacity: isShifting ? 0.5 : 1 }}
         >
           {isShifting ? 'Shifting...' : `Shift everything forward ${totalDays} day${totalDays > 1 ? 's' : ''}`}
         </button>
         <button
           onClick={handleManual}
-          className="text-text-secondary text-xs hover:text-text-primary transition-colors"
+          style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           I'll handle it manually
         </button>

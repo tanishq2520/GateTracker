@@ -293,7 +293,7 @@ export default function CalendarPage() {
             <div key={d} className={`text-center text-text-muted font-mono ${compact ? 'text-[9px]' : 'text-xs'}`}>{compact ? d[0] : d}</div>
           ))}
         </div>
-        <div className={`grid grid-cols-7 ${compact ? 'gap-0.5' : 'gap-1'}`}>
+      <div className={`grid grid-cols-7 ${compact ? 'gap-0.5' : 'gap-1'}`}>
           {days.map(({ date, inMonth }) => {
             const displayEntry = calendarDisplayMap[date] || null;
             const isToday = date === today;
@@ -309,11 +309,16 @@ export default function CalendarPage() {
                   ${!inMonth ? 'opacity-20' : ''}
                   ${isToday ? 'ring-1 ring-accent-blue' : ''}
                   ${isGate ? 'ring-1 ring-accent-red' : ''}
-                  ${inMonth ? 'hover:bg-surface transition-colors' : ''}
-                  ${!compact ? 'bg-bg/50 border border-border/30' : ''}
                 `}
+                style={{
+                  background: !compact ? 'rgba(255,255,255,0.03)' : undefined,
+                  border: !compact ? '1px solid rgba(255,255,255,0.06)' : undefined,
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => { if (inMonth && !compact) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                onMouseLeave={e => { if (!compact) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
               >
-                <span className={`${compact ? 'mx-auto mt-1' : 'mb-0.5'} font-mono ${isToday ? 'text-accent-blue font-bold' : isPast && inMonth ? 'text-text-muted' : 'text-text-primary'}`}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: compact ? 9 : 11, color: isToday ? '#F97316' : isPast && inMonth ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.8)', fontWeight: isToday ? 700 : 400, ...(compact ? { margin: '4px auto 0' } : { marginBottom: 2 }) }}>
                   {new Date(`${date}T00:00:00`).getDate()}
                 </span>
                 {displayEntry?.label && !compact && (
@@ -441,7 +446,12 @@ export default function CalendarPage() {
                       ...f,
                       days: f.days.includes(i) ? f.days.filter(x => x !== i) : [...f.days, i]
                     }))}
-                    className={`px-2 py-1 rounded text-xs font-mono border transition-colors ${bulkForm.days.includes(i) ? 'border-accent-blue bg-accent-blue/10 text-accent-blue' : 'border-border text-text-muted'}`}
+                    style={{
+                      padding: '4px 10px', borderRadius: 4, fontSize: 11, fontFamily: 'var(--font-mono)', cursor: 'pointer', transition: 'all 0.15s',
+                      background: bulkForm.days.includes(i) ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${bulkForm.days.includes(i) ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                      color: bulkForm.days.includes(i) ? '#F97316' : 'rgba(255,255,255,0.55)',
+                    }}
                   >
                     {d}
                   </button>
@@ -453,12 +463,12 @@ export default function CalendarPage() {
               <label className="label mb-2">Tasks to assign each day</label>
               <div className="space-y-2 mb-3">
                 {bulkForm.tasks.map((t, idx) => (
-                  <div key={idx} className="flex items-center gap-2 p-2 bg-bg/50 border border-border rounded text-xs font-mono">
-                    <span className="flex-1 text-text-primary">{t.description}</span>
-                    <span className="text-text-muted">{t.estimatedHours}h</span>
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, fontSize: 11, fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ flex: 1, color: 'rgba(255,255,255,0.85)' }}>{t.description}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>{t.estimatedHours}h</span>
                     <button 
                       onClick={() => setBulkForm(f => ({ ...f, tasks: f.tasks.filter((_, i) => i !== idx) }))}
-                      className="text-accent-red hover:underline p-1"
+                      style={{ color: '#F87171', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
                     >
                       Remove
                     </button>

@@ -11,10 +11,11 @@ const ProtectedRoute = ({ children }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#1C1917',
-        color: '#A8A29E',
-        fontFamily: 'DM Mono, monospace',
+        color: 'rgba(255,255,255,0.55)',
+        fontFamily: 'var(--font-mono)',
         fontSize: '14px',
+        position: 'relative',
+        zIndex: 1,
       }}>
         Loading...
       </div>

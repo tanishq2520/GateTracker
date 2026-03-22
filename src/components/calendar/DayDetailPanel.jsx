@@ -286,7 +286,7 @@ export default function DayDetailPanel({ date, onClose }) {
     sectionLabel: { fontFamily:'var(--font-mono)',fontSize:9,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.08em',display:'block',marginBottom:8 },
     dayTypeTag:(active, color)=>({
       background: active ? color : 'rgba(255,255,255,0.08)',
-      color: active ? '#1C1917' : 'rgba(255,255,255,0.45)',
+      color: active ? '#fff' : 'rgba(255,255,255,0.45)',
       fontSize:10,
       padding:'3px 10px',
       borderRadius:4,
@@ -314,19 +314,19 @@ export default function DayDetailPanel({ date, onClose }) {
         <div style={S.hdr}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
             <div>
-              <div style={{fontFamily:'DM Mono,monospace',fontSize:9,color:'#A8A29E',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4}}>
+              <div style={{fontFamily:'var(--font-mono)',fontSize:9,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:4}}>
                 {isToday?'📅 Today':isPast?'⏮ Past Day':'🔜 Upcoming'}
               </div>
-              <div style={{fontFamily:'DM Sans,sans-serif',fontSize:15,fontWeight:600,color:'#FAFAF9',lineHeight:1.4}}>
+              <div style={{fontFamily:'var(--font-body)',fontSize:15,fontWeight:600,color:'rgba(255,255,255,0.9)',lineHeight:1.4}}>
                 {fmt(dateKey)}
               </div>
               {tasks.length>0 && (
-                <div style={{fontFamily:'JetBrains Mono,monospace',fontSize:10,color:'#F97316',marginTop:5}}>
+                <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'#F97316',marginTop:5}}>
                   {completedHrs.toFixed(1)} / {plannedHrs.toFixed(1)} hrs done · {tasks.filter(t=>t.done).length}/{tasks.length} tasks
                 </div>
               )}
             </div>
-            <button onClick={onClose} style={{...S.iconBtn,color:'#57534E',fontSize:18}}>✕</button>
+            <button onClick={onClose} style={{...S.iconBtn,color:'rgba(255,255,255,0.4)',fontSize:18}}>✕</button>
           </div>
         </div>
 
@@ -357,11 +357,11 @@ export default function DayDetailPanel({ date, onClose }) {
             <span style={S.sectionLabel}>Tasks {tasks.length>0 && `(${tasks.length})`}</span>
 
             {!loaded && (
-              <div style={{color:'#57534E',fontFamily:'DM Mono,monospace',fontSize:11}}>Loading…</div>
+              <div style={{color:'rgba(255,255,255,0.35)',fontFamily:'var(--font-mono)',fontSize:11}}>Loading…</div>
             )}
 
             {loaded && tasks.length===0 && (
-              <p style={{color:'#57534E',fontFamily:'DM Mono,monospace',fontSize:11,marginBottom:12}}>
+              <p style={{color:'rgba(255,255,255,0.35)',fontFamily:'var(--font-mono)',fontSize:11,marginBottom:12}}>
                 {isPast ? 'Nothing was planned for this day.' : 'No tasks yet. Add one below.'}
               </p>
             )}
@@ -399,7 +399,7 @@ export default function DayDetailPanel({ date, onClose }) {
                         {canEdit && (
                           <button onClick={()=>handleToggleDone(t.id)} title={t.done ? 'Mark as not done' : 'Mark as done'} style={{...S.iconBtn,width:17,height:17,borderRadius:3,border:`1px solid ${t.done?'#34D399':'rgba(255,255,255,0.25)'}`,background:t.done?'#34D399':'transparent',flexShrink:0,marginTop:2,cursor:isToday?'pointer':'default'}}>
                             {t.done ? (
-                              <svg style={{width:10,height:10}} fill="none" viewBox="0 0 24 24" stroke="#1C1917" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                              <svg style={{width:10,height:10}} fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                             ) : (
                               <span style={{color:'#F87171',fontSize:11,fontWeight:700,lineHeight:1}}>x</span>
                             )}
@@ -444,7 +444,7 @@ export default function DayDetailPanel({ date, onClose }) {
             )}
             {canEdit && dayType !== 'sem_exam' && (
               <form onSubmit={handleAdd} style={{display:'flex',flexDirection:'column',gap:8,padding:12,background:'rgba(255,255,255,0.04)',border:'1px dashed rgba(255,255,255,0.12)',borderRadius:6}}>
-                <div style={{fontFamily:'DM Mono,monospace',fontSize:9,color:'#F97316',letterSpacing:'0.06em'}}>+ NEW TASK</div>
+                <div style={{fontFamily:'var(--font-mono)',fontSize:9,color:'#F97316',letterSpacing:'0.06em'}}>+ NEW TASK</div>
                 <input
                   type="text"
                   placeholder="What's the task? (e.g. Revise OS Unit 3)"
