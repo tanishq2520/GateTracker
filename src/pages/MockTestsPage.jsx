@@ -92,9 +92,9 @@ export default function MockTestsPage() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-medium text-text-primary font-mono">Mock Tests</h1>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.02em', margin: 0 }}>Mock Tests</h1>
           {stats && (
-            <p className="text-text-muted text-xs mt-1 font-mono">
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 4, fontFamily: 'var(--font-mono)' }}>
               Best: {stats.best}% | Avg: {stats.avg}% | Last: {stats.last}%
             </p>
           )}
@@ -106,8 +106,8 @@ export default function MockTestsPage() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="card mb-6">
-          <h3 className="text-sm font-mono font-medium text-text-primary mb-4">{editingId ? 'Edit Test' : 'Add Mock Test'}</h3>
+        <div className="liquid-glass mb-6" style={{ borderRadius: 16, padding: '24px' }}>
+          <h3 style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.6)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{editingId ? 'Edit Test' : 'Add Mock Test'}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Test Name</label>
@@ -183,14 +183,14 @@ export default function MockTestsPage() {
       {sorted.length >= 2 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* Score trend */}
-          <div className="card">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Score Trend</h3>
+          <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+            <h3 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Score Trend</h3>
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={scoreData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#44403C" />
-                <XAxis dataKey="name" tick={{ fill: '#8B90A0', fontSize: 10 }} />
-                <YAxis domain={[0, 100]} tick={{ fill: '#8B90A0', fontSize: 10 }} />
-                <Tooltip contentStyle={{ background: '#292524', border: '1px solid #44403C', borderRadius: '6px', color: '#FAFAF9' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
+                <YAxis domain={[0, 100]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: 'rgba(255,255,255,0.9)' }} />
                 {goals.targetScore && <ReferenceLine y={goals.targetScore} stroke="#F59E0B" strokeDasharray="4 4" label={{ value: 'Target', fill: '#F59E0B', fontSize: 10 }} />}
                 <Line type="monotone" dataKey="score" stroke="#4F8EF7" dot={{ fill: '#4F8EF7' }} strokeWidth={2} />
               </LineChart>
@@ -198,14 +198,14 @@ export default function MockTestsPage() {
           </div>
 
           {/* Distribution */}
-          <div className="card">
-            <h3 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Score Distribution</h3>
+          <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+            <h3 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Score Distribution</h3>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={distributionData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#44403C" />
-                <XAxis dataKey="range" tick={{ fill: '#8B90A0', fontSize: 9 }} />
-                <YAxis allowDecimals={false} tick={{ fill: '#8B90A0', fontSize: 10 }} />
-                <Tooltip contentStyle={{ background: '#292524', border: '1px solid #44403C', borderRadius: '6px', color: '#FAFAF9' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                <XAxis dataKey="range" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9 }} />
+                <YAxis allowDecimals={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: 'rgba(255,255,255,0.9)' }} />
                 <Bar dataKey="count" fill="#A78BFA" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -213,14 +213,14 @@ export default function MockTestsPage() {
 
           {/* Percentile trend */}
           {hasPercentile && (
-            <div className="card">
-              <h3 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Percentile Trend</h3>
+            <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+              <h3 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Percentile Trend</h3>
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={scoreData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#44403C" />
-                  <XAxis dataKey="name" tick={{ fill: '#8B90A0', fontSize: 10 }} />
-                  <YAxis domain={[0, 100]} tick={{ fill: '#8B90A0', fontSize: 10 }} />
-                  <Tooltip contentStyle={{ background: '#292524', border: '1px solid #44403C', borderRadius: '6px', color: '#FAFAF9' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                  <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
+                  <YAxis domain={[0, 100]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }} />
+                  <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: 'rgba(255,255,255,0.9)' }} />
                   <Line type="monotone" dataKey="percentile" stroke="#22C55E" dot={{ fill: '#22C55E' }} strokeWidth={2} connectNulls />
                 </LineChart>
               </ResponsiveContainer>
@@ -231,13 +231,13 @@ export default function MockTestsPage() {
 
       {/* Test history table */}
       {sorted.length > 0 && (
-        <div className="card overflow-x-auto">
-          <h3 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Test History</h3>
+        <div className="liquid-glass overflow-x-auto" style={{ borderRadius: 16, padding: '18px 20px' }}>
+          <h3 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Test History</h3>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border">
+              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 {['Date', 'Test Name', 'Score', '%', 'Percentile', 'Platform', 'Actions'].map(h => (
-                  <th key={h} className="text-left py-2 px-2 text-text-muted text-xs font-mono">{h}</th>
+                  <th key={h} style={{ textAlign: 'left', padding: '6px 8px', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 400 }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -245,17 +245,17 @@ export default function MockTestsPage() {
               {sorted.map(t => {
                 const pct = t.totalMarks > 0 ? Math.round((t.scored / t.totalMarks) * 100) : 0;
                 return (
-                  <tr key={t.id} className="border-b border-border/50 hover:bg-surface/50 transition-colors">
-                    <td className="py-2 px-2 text-text-muted text-xs font-mono">{formatDate(t.date, 'MMM d')}</td>
-                    <td className="py-2 px-2 text-text-primary">{t.testName}</td>
-                    <td className="py-2 px-2 font-data text-text-primary">{t.scored}/{t.totalMarks}</td>
-                    <td className="py-2 px-2 font-data text-accent-blue">{pct}%</td>
-                    <td className="py-2 px-2 font-data text-text-muted">{t.percentile ?? '—'}</td>
-                    <td className="py-2 px-2 text-text-secondary text-xs">{t.platform}</td>
-                    <td className="py-2 px-2">
+                  <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <td style={{ padding: '8px 8px', color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: 'var(--font-mono)' }}>{formatDate(t.date, 'MMM d')}</td>
+                    <td style={{ padding: '8px 8px', color: 'rgba(255,255,255,0.85)', fontSize: 13 }}>{t.testName}</td>
+                    <td style={{ padding: '8px 8px', color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>{t.scored}/{t.totalMarks}</td>
+                    <td style={{ padding: '8px 8px', color: '#F97316', fontFamily: 'var(--font-mono)', fontSize: 13 }}>{pct}%</td>
+                    <td style={{ padding: '8px 8px', color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>{t.percentile ?? '—'}</td>
+                    <td style={{ padding: '8px 8px', color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>{t.platform}</td>
+                    <td style={{ padding: '8px 8px' }}>
                       <div className="flex gap-2">
-                        <button onClick={() => handleEdit(t)} className="text-accent-blue text-xs hover:underline">Edit</button>
-                        <button onClick={() => handleDelete(t.id)} className="text-accent-red text-xs hover:underline">Delete</button>
+                        <button onClick={() => handleEdit(t)} style={{ color: '#F97316', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>Edit</button>
+                        <button onClick={() => handleDelete(t.id)} style={{ color: '#F87171', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>Delete</button>
                       </div>
                     </td>
                   </tr>

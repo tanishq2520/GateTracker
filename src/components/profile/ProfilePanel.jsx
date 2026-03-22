@@ -570,9 +570,9 @@ export default function ProfilePanel({ open, onClose }) {
                   ...actionButtonStyle,
                   width: 'auto',
                   padding: '8px 12px',
-                  background: '#3C3733',
-                  color: '#A8A29E',
-                  border: '1px solid #57534E',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: 'rgba(255,255,255,0.55)',
+                  border: '1px solid rgba(255,255,255,0.12)',
                 }}
               >
                 Cancel
@@ -582,7 +582,7 @@ export default function ProfilePanel({ open, onClose }) {
 
           {uploadProgress > 0 && (
             <div style={{ width: 90, marginTop: 12 }}>
-              <div style={{ height: 6, background: '#3C3733', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 999, overflow: 'hidden' }}>
                 <div style={{ width: `${uploadProgress}%`, height: '100%', background: '#F97316', transition: 'width 120ms ease' }} />
               </div>
               <div style={{ color: '#A8A29E', fontFamily: 'DM Mono, monospace', fontSize: 10, marginTop: 5, textAlign: 'center' }}>

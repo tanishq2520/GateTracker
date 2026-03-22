@@ -52,16 +52,16 @@ export default function LogTodayModal({ onClose }) {
   const getSubjectName = (id) => subjects[id]?.name.split(' ')[0] || 'General';
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="card max-w-lg w-full max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }} onClick={onClose}>
+      <div className="liquid-glass-strong" style={{ maxWidth: 512, width: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column', borderRadius: 16, padding: 24 }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4 shrink-0">
           <div>
-            <h3 className="text-sm font-mono font-medium text-text-primary uppercase tracking-wider">Today's Tasks</h3>
-            <p className="text-text-muted text-xs mt-1">
+            <h3 style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500 }}>Today's Tasks</h3>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 4 }}>
               {totalCompleted} / {totalPlanned} hrs done
             </p>
           </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text-primary px-2 py-1">✕</button>
+          <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', fontSize: 16 }}>✕</button>
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-5 pr-1">
@@ -69,37 +69,37 @@ export default function LogTodayModal({ onClose }) {
           <div>
             <h4 className="label mb-2">Tasks ({tasks.length})</h4>
             {tasks.length === 0 ? (
-              <p className="text-text-muted text-xs italic mb-4">No tasks added for today yet.</p>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontStyle: 'italic', marginBottom: 16 }}>No tasks added for today yet.</p>
             ) : (
               <div className="space-y-2 mb-4">
                 {tasks.map(t => (
-                  <div key={t.id} className={`flex items-start gap-3 p-3 rounded-md border ${t.done ? 'border-accent-green/30 bg-accent-green/5 opacity-70' : 'border-border bg-bg/50'}`}>
+                  <div key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 12, borderRadius: 8, border: `1px solid ${t.done ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.08)'}`, background: t.done ? 'rgba(52,211,153,0.05)' : 'rgba(255,255,255,0.04)', opacity: t.done ? 0.7 : 1 }}>
                     <button 
                       onClick={() => markDoneAction(uid, today, t.id, !t.done)}
                       title={t.done ? 'Mark as not done' : 'Mark as done'}
-                      className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${t.done ? 'bg-accent-green border-accent-green' : 'border-text-secondary hover:border-accent-green'}`}
+                      style={{ marginTop: 2, width: 16, height: 16, borderRadius: 3, border: `1px solid ${t.done ? '#34D399' : 'rgba(255,255,255,0.3)'}`, background: t.done ? '#34D399' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
                     >
                       {t.done ? (
-                        <svg className="w-3 h-3 text-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="#1C1917" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       ) : (
-                        <span className="text-[10px] leading-none font-bold text-accent-red">x</span>
+                        <span style={{ fontSize: 10, lineHeight: 1, fontWeight: 700, color: '#F87171' }}>x</span>
                       )}
                     </button>
                     
                     <div className="flex-1 min-w-0">
-                      <div className={`text-sm ${t.done ? 'text-text-muted line-through' : 'text-text-primary'}`}>{t.description}</div>
+                      <div style={{ fontSize: 13, color: t.done ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.9)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.description}</div>
                       <div className="flex items-center gap-2 mt-1">
                         {t.subjectId && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded border border-border" style={{ color: getSubjectColor(t.subjectId) }}>
+                          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, border: '1px solid rgba(255,255,255,0.1)', color: getSubjectColor(t.subjectId) }}>
                             {getSubjectName(t.subjectId)}
                           </span>
                         )}
-                        <span className="text-text-muted text-[10px] font-mono">{t.estimatedHours} hrs</span>
+                        <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, fontFamily: 'var(--font-mono)' }}>{t.estimatedHours} hrs</span>
                       </div>
                     </div>
 
                     {!t.done && (
-                      <button onClick={() => removeAction(uid, today, t.id)} className="text-text-muted hover:text-accent-red p-1 shrink-0" title="Remove task">
+                      <button onClick={() => removeAction(uid, today, t.id)} style={{ color: 'rgba(255,255,255,0.35)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }} title="Remove task">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                     )}
@@ -109,7 +109,7 @@ export default function LogTodayModal({ onClose }) {
             )}
 
             {/* Add Task Form */}
-            <form onSubmit={handleAddTask} className="flex flex-col gap-2 p-3 bg-bg/30 rounded-md border border-border border-dashed">
+            <form onSubmit={handleAddTask} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px dashed rgba(255,255,255,0.12)' }}>
               <input
                 type="text"
                 placeholder="Task description (e.g. Revise OS Unit 3)"

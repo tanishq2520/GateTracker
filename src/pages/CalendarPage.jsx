@@ -293,7 +293,7 @@ export default function CalendarPage() {
             <div key={d} className={`text-center text-text-muted font-mono ${compact ? 'text-[9px]' : 'text-xs'}`}>{compact ? d[0] : d}</div>
           ))}
         </div>
-        <div className={`grid grid-cols-7 ${compact ? 'gap-0.5' : 'gap-1'}`}>
+      <div className={`grid grid-cols-7 ${compact ? 'gap-0.5' : 'gap-1'}`}>
           {days.map(({ date, inMonth }) => {
             const displayEntry = calendarDisplayMap[date] || null;
             const isToday = date === today;
@@ -309,11 +309,16 @@ export default function CalendarPage() {
                   ${!inMonth ? 'opacity-20' : ''}
                   ${isToday ? 'ring-1 ring-accent-blue' : ''}
                   ${isGate ? 'ring-1 ring-accent-red' : ''}
-                  ${inMonth ? 'hover:bg-surface transition-colors' : ''}
-                  ${!compact ? 'bg-bg/50 border border-border/30' : ''}
                 `}
+                style={{
+                  background: !compact ? 'rgba(255,255,255,0.03)' : undefined,
+                  border: !compact ? '1px solid rgba(255,255,255,0.06)' : undefined,
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => { if (inMonth && !compact) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                onMouseLeave={e => { if (!compact) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
               >
-                <span className={`${compact ? 'mx-auto mt-1' : 'mb-0.5'} font-mono ${isToday ? 'text-accent-blue font-bold' : isPast && inMonth ? 'text-text-muted' : 'text-text-primary'}`}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: compact ? 9 : 11, color: isToday ? '#F97316' : isPast && inMonth ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.8)', fontWeight: isToday ? 700 : 400, ...(compact ? { margin: '4px auto 0' } : { marginBottom: 2 }) }}>
                   {new Date(`${date}T00:00:00`).getDate()}
                 </span>
                 {displayEntry?.label && !compact && (
@@ -344,14 +349,14 @@ export default function CalendarPage() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-medium text-text-primary font-mono">Calendar</h1>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.02em', margin: 0 }}>Calendar</h1>
         <div className="flex items-center gap-2">
           {gateDate && (
             <button onClick={jumpToGate} className="btn-secondary text-xs">Jump to GATE date</button>
           )}
           <button
             onClick={() => setFullJourney(!fullJourney)}
-            className={`btn-secondary text-xs ${fullJourney ? 'border-accent-blue text-accent-blue' : ''}`}
+            className="btn-secondary text-xs"
           >
             {fullJourney ? 'Month View' : 'Full Journey View'}
           </button>
@@ -360,15 +365,15 @@ export default function CalendarPage() {
 
       {!fullJourney ? (
         /* Month view */
-        <div className="card">
+        <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
           <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth} className="text-text-muted hover:text-text-primary p-1">
+            <button onClick={prevMonth} className="text-text-muted hover:text-text-primary p-1" style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             </button>
-            <h2 className="text-text-primary font-mono text-sm font-medium">
+            <h2 style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500 }}>
               {formatMonthYear(`${viewDate.year}-${String(viewDate.month + 1).padStart(2, '0')}-01`)}
             </h2>
-            <button onClick={nextMonth} className="text-text-muted hover:text-text-primary p-1">
+            <button onClick={nextMonth} className="text-text-muted hover:text-text-primary p-1" style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </button>
           </div>
@@ -378,8 +383,8 @@ export default function CalendarPage() {
         /* Full Journey View */
         <div className="space-y-4">
           {journeyMonths.map(({ year, month }) => (
-            <div key={`${year}-${month}`} className="card">
-              <h3 className="text-xs font-mono text-text-muted mb-2">
+            <div key={`${year}-${month}`} className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+              <h3 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>
                 {formatMonthYear(`${year}-${String(month + 1).padStart(2, '0')}-01`)}
               </h3>
               {renderCalendarGrid(year, month, true)}
@@ -389,22 +394,22 @@ export default function CalendarPage() {
       )}
 
       {/* Legend */}
-      <div className="mt-4 card">
-        <div className="flex flex-wrap gap-4 text-xs text-text-muted">
+      <div className="liquid-glass mt-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
+        <div className="flex flex-wrap gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
           {Object.entries(EVENT_TYPES).map(([key, { label, color }]) => (
             <div key={key} className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full" style={{ background: color }} />
               <span>{label}</span>
             </div>
           ))}
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-accent-green" /><span>Done</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-accent-red" /><span>Missed</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-400" /><span>Shifted</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: '#34D399' }} /><span>Done</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: '#F87171' }} /><span>Missed</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full" style={{ background: '#F97316' }} /><span>Shifted</span></div>
         </div>
       </div>
 
       {/* Bulk Add Helper */}
-      <div className="mt-4 card">
+      <div className="liquid-glass mt-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
         <button onClick={() => setBulkOpen(!bulkOpen)} className="flex items-center gap-2 text-sm font-medium text-text-primary w-full">
           <svg className={`w-4 h-4 text-text-muted transition-transform ${bulkOpen ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
           Quick Fill Study Days
@@ -441,7 +446,12 @@ export default function CalendarPage() {
                       ...f,
                       days: f.days.includes(i) ? f.days.filter(x => x !== i) : [...f.days, i]
                     }))}
-                    className={`px-2 py-1 rounded text-xs font-mono border transition-colors ${bulkForm.days.includes(i) ? 'border-accent-blue bg-accent-blue/10 text-accent-blue' : 'border-border text-text-muted'}`}
+                    style={{
+                      padding: '4px 10px', borderRadius: 4, fontSize: 11, fontFamily: 'var(--font-mono)', cursor: 'pointer', transition: 'all 0.15s',
+                      background: bulkForm.days.includes(i) ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${bulkForm.days.includes(i) ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                      color: bulkForm.days.includes(i) ? '#F97316' : 'rgba(255,255,255,0.55)',
+                    }}
                   >
                     {d}
                   </button>
@@ -453,12 +463,12 @@ export default function CalendarPage() {
               <label className="label mb-2">Tasks to assign each day</label>
               <div className="space-y-2 mb-3">
                 {bulkForm.tasks.map((t, idx) => (
-                  <div key={idx} className="flex items-center gap-2 p-2 bg-bg/50 border border-border rounded text-xs font-mono">
-                    <span className="flex-1 text-text-primary">{t.description}</span>
-                    <span className="text-text-muted">{t.estimatedHours}h</span>
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, fontSize: 11, fontFamily: 'var(--font-mono)' }}>
+                    <span style={{ flex: 1, color: 'rgba(255,255,255,0.85)' }}>{t.description}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>{t.estimatedHours}h</span>
                     <button 
                       onClick={() => setBulkForm(f => ({ ...f, tasks: f.tasks.filter((_, i) => i !== idx) }))}
-                      className="text-accent-red hover:underline p-1"
+                      style={{ color: '#F87171', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
                     >
                       Remove
                     </button>
@@ -531,7 +541,7 @@ export default function CalendarPage() {
       )}
       {modalMode === 'view-event' && selectedEvent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="card max-w-sm w-full">
+          <div className="liquid-glass max-w-sm w-full" style={{ borderRadius: 16, padding: "18px 20px" }}>
             <h3 className="text-sm font-mono font-medium text-text-primary mb-3">Past Event</h3>
             <div className="space-y-2 text-sm">
               <div><span className="text-text-muted">Date: </span><span className="text-text-primary">{selectedEvent.date}</span></div>

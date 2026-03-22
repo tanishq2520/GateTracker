@@ -8,7 +8,7 @@ import { nanoid } from '../utils/nanoid';
 import { formatDate, todayISO, addDaysToISO, estimateEndDate, isPastISO, isTodayISO } from '../utils/dateUtils';
 
 function SectionHeader({ children }) {
-  return <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3 pb-2 border-b border-border">{children}</h2>;
+  return <h2 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.4)', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>{children}</h2>;
 }
 
 // canUndo: returns true only if the unit was marked done TODAY
@@ -38,7 +38,8 @@ function UnitRow({ unit, onMarkDone, onUnmark, onEdit, onRemove, isEditing, edit
   if (isEditing) {
     return (
       <div
-        className="flex items-center gap-2 py-3 border-b border-border/50 last:border-0"
+        className="flex items-center gap-2 py-3"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         onBlur={e => {
           // Only save when focus leaves the entire row (not when jumping between inputs)
           if (!e.currentTarget.contains(e.relatedTarget)) onSave();
@@ -72,14 +73,14 @@ function UnitRow({ unit, onMarkDone, onUnmark, onEdit, onRemove, isEditing, edit
         />
         <button
           onMouseDown={e => { e.preventDefault(); onSave(); }}
-          className="text-accent-green text-xs hover:text-accent-green/80 transition-colors px-1 flex-shrink-0"
+          style={{ color: '#34D399', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}
           title="Save"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
         </button>
         <button
           onMouseDown={e => { e.preventDefault(); onCancelEdit(); }}
-          className="text-text-muted text-xs hover:text-accent-red transition-colors px-1 flex-shrink-0"
+          style={{ color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}
           title="Cancel"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -89,34 +90,32 @@ function UnitRow({ unit, onMarkDone, onUnmark, onEdit, onRemove, isEditing, edit
   }
 
   return (
-    <div className={`flex items-center gap-3 py-3 border-b border-border/50 last:border-0 group ${isMissed ? 'opacity-60' : ''}`}>
+    <div className={`flex items-center gap-3 py-3 group ${isMissed ? 'opacity-60' : ''}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Checkbox */}
       {unit.done && !undoable ? (
         // Locked done checkbox — disabled with tooltip
         <button
           disabled
           title={lockedTooltip}
-          className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center bg-accent-green border-accent-green text-white cursor-not-allowed"
+          style={{ width: 16, height: 16, borderRadius: 3, border: '1px solid #34D399', background: '#34D399', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'not-allowed' }}
         >
-          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#1C1917" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
         </button>
       ) : unit.done && undoable ? (
         // Undoable done checkbox — clickable
         <button
           onClick={() => onUnmark(unit.id)}
           title="Click to undo completion"
-          className="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center bg-accent-green border-accent-green text-white cursor-pointer hover:bg-accent-green/70 hover:border-accent-green/70 transition-colors"
+          style={{ width: 16, height: 16, borderRadius: 3, border: '1px solid #34D399', background: '#34D399', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
         >
-          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="#1C1917" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
         </button>
       ) : (
         // Normal incomplete checkbox
         <button
           onClick={() => !isMissed && onMarkDone(unit.id)}
           disabled={isMissed}
-          className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
-            isMissed ? 'border-accent-red/50 cursor-not-allowed' : 'border-border hover:border-accent-blue cursor-pointer'
-          }`}
+          style={{ width: 16, height: 16, borderRadius: 3, border: `1px solid ${isMissed ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.25)'}`, background: 'transparent', flexShrink: 0, cursor: isMissed ? 'not-allowed' : 'pointer' }}
         />
       )}
 
@@ -124,24 +123,24 @@ function UnitRow({ unit, onMarkDone, onUnmark, onEdit, onRemove, isEditing, edit
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           {unit.done && (
-            <svg className="w-3 h-3 text-accent-green flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#34D399" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           )}
-          <span className={`text-sm truncate ${unit.done ? 'text-text-muted' : 'text-text-primary'}`}>
+          <span style={{ fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: unit.done ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.9)' }}>
             {unit.name || `Unit ${unit.id}`}
           </span>
-          {isMissed && <span className="text-accent-red text-xs font-mono">Missed</span>}
-          {isToday && !unit.done && <span className="text-accent-orange text-xs font-mono">Today</span>}
+          {isMissed && <span style={{ color: '#F87171', fontSize: 10, fontFamily: 'var(--font-mono)' }}>Missed</span>}
+          {isToday && !unit.done && <span style={{ color: '#FBBF24', fontSize: 10, fontFamily: 'var(--font-mono)' }}>Today</span>}
         </div>
         <div className="flex items-center gap-3 mt-0.5">
-          <span className="text-text-muted text-xs">{unit.totalTopics || 0} topics</span>
-          <span className="text-text-muted text-xs">{unit.lecturesNeeded || 0} lectures</span>
+          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{unit.totalTopics || 0} topics</span>
+          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{unit.lecturesNeeded || 0} lectures</span>
           {unit.plannedDate && !unit.done && (
-            <span className="text-text-muted text-xs">{formatDate(unit.plannedDate)}</span>
+            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{formatDate(unit.plannedDate)}</span>
           )}
           {unit.done && unit.doneOn && (
-            <span className="text-accent-green text-xs">Done {formatDate(unit.doneOn)}</span>
+            <span style={{ color: '#34D399', fontSize: 11 }}>Done {formatDate(unit.doneOn)}</span>
           )}
         </div>
       </div>
@@ -151,7 +150,8 @@ function UnitRow({ unit, onMarkDone, onUnmark, onEdit, onRemove, isEditing, edit
         <button
           onClick={() => onEdit(unit)}
           title="Edit unit"
-          className="w-6 h-6 flex items-center justify-center text-text-muted hover:text-accent-blue transition-colors rounded opacity-0 group-hover:opacity-100"
+          style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', borderRadius: 4, opacity: 0 }}
+          className="group-hover:opacity-100"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.5-6.5a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-.707.464l-3.536.707.707-3.536a2 2 0 01.464-.707z" />
@@ -160,7 +160,8 @@ function UnitRow({ unit, onMarkDone, onUnmark, onEdit, onRemove, isEditing, edit
         <button
           onClick={() => onRemove(unit.id)}
           title="Remove unit"
-          className="w-6 h-6 flex items-center justify-center text-text-muted hover:text-accent-red transition-colors rounded opacity-0 group-hover:opacity-100"
+          style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', borderRadius: 4, opacity: 0 }}
+          className="group-hover:opacity-100"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -320,34 +321,34 @@ export default function SubjectDetailPage() {
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Link to="/subjects" className="text-text-muted hover:text-text-primary transition-colors">
+        <Link to="/subjects" style={{ color: 'rgba(255,255,255,0.4)' }}>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </Link>
         <div className="w-3 h-3 rounded-full shrink-0" style={{ background: subject.color }} />
-        <h1 className="text-xl font-medium text-text-primary font-mono flex-1">{subject.name}</h1>
-        <span className={`text-sm font-mono ${STATUS_COLOR[subject.status] || 'text-text-muted'}`}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.02em', flex: 1, margin: 0 }}>{subject.name}</h1>
+        <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: STATUS_COLOR[subject.status] ? undefined : 'rgba(255,255,255,0.4)', ...(STATUS_COLOR[subject.status] ? {} : {}) }}>
           {subject.status?.replace('_', ' ')}
         </span>
       </div>
 
       {/* Progress header */}
-      <div className="card mb-4">
+      <div className="liquid-glass mb-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-text-secondary text-sm">{doneUnits}/{units.length} units complete</span>
-          <span className="text-text-primary font-data text-lg font-medium">{progress}%</span>
+          <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>{doneUnits}/{units.length} units complete</span>
+          <span style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 600 }}>{progress}%</span>
         </div>
         <div className="progress-bar">
           <div className="progress-fill" style={{ width: `${progress}%`, background: subject.color }} />
         </div>
         {estDays > 0 && (
-          <p className="text-text-muted text-xs mt-2 font-mono">
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginTop: 8, fontFamily: 'var(--font-mono)' }}>
             At {lpd} lecture{lpd > 1 ? 's' : ''}/day, this subject takes approximately {estDays} days.
           </p>
         )}
       </div>
 
       {/* Section A — Setup */}
-      <div className="card mb-4">
+      <div className="liquid-glass mb-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
         <SectionHeader>Setup</SectionHeader>
         <div className="grid grid-cols-2 gap-4">
           {[
@@ -382,17 +383,17 @@ export default function SubjectDetailPage() {
               type="color"
               defaultValue={subject.color}
               onBlur={e => handleFieldUpdate('color', e.target.value)}
-              className="w-10 h-9 rounded-md border border-border bg-bg cursor-pointer"
+              style={{ width: 40, height: 36, borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', cursor: 'pointer' }}
             />
           </div>
         </div>
       </div>
 
       {/* Section B — Units */}
-      <div className="card mb-4">
+      <div className="liquid-glass mb-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
         <SectionHeader>Units</SectionHeader>
         {units.length === 0 && (
-          <p className="text-text-muted text-sm text-center py-4">No units added. Click "+ Add Unit" to start.</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>No units added. Click "+ Add Unit" to start.</p>
         )}
         {units.map((unit) => (
           <UnitRow
@@ -411,7 +412,7 @@ export default function SubjectDetailPage() {
         ))}
 
         {showAddUnit ? (
-          <div className="mt-3 pt-3 border-t border-border">
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="col-span-3">
                 <label className="label">Unit Name</label>
@@ -432,15 +433,15 @@ export default function SubjectDetailPage() {
             </div>
           </div>
         ) : (
-          <button onClick={() => setShowAddUnit(true)} className="mt-3 text-accent-blue text-sm hover:text-accent-blue/80 transition-colors">+ Add Unit</button>
+          <button onClick={() => setShowAddUnit(true)} style={{ marginTop: 12, color: '#F97316', fontSize: 13, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>+ Add Unit</button>
         )}
       </div>
 
       {/* Section C — Revision Tracker */}
-      <div className="card mb-4">
+      <div className="liquid-glass mb-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
         <SectionHeader>Revision Tracker</SectionHeader>
         {(subject.revisionSessions || []).length === 0 && (
-          <p className="text-text-muted text-sm mb-3">No revision sessions planned.</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 12 }}>No revision sessions planned.</p>
         )}
         {(subject.revisionSessions || []).map((rev, i) => {
           const today = todayISO();
@@ -448,8 +449,8 @@ export default function SubjectDetailPage() {
           const isMissed = isPast && !rev.done;
           const isToday = rev.plannedDate && rev.plannedDate === today;
           return (
-            <div key={rev.id} className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0">
-              <span className="text-text-muted text-xs font-mono w-20 shrink-0">Revision {i + 1}</span>
+            <div key={rev.id} className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: 'var(--font-mono)', width: 80, flexShrink: 0 }}>Revision {i + 1}</span>
               <input
                 type="date"
                 value={rev.plannedDate || ''}
@@ -459,20 +460,20 @@ export default function SubjectDetailPage() {
                 }}
                 className="input w-36"
               />
-              {isMissed && <span className="text-accent-red text-xs font-mono">Missed</span>}
+              {isMissed && <span style={{ color: '#F87171', fontSize: 11, fontFamily: 'var(--font-mono)' }}>Missed</span>}
               {isToday && !rev.done && (
-                <button onClick={() => handleMarkRevisionDone(rev.id)} className="text-xs text-accent-blue hover:text-accent-blue/80">Mark Done Today</button>
+                <button onClick={() => handleMarkRevisionDone(rev.id)} style={{ fontSize: 11, color: '#F97316', background: 'none', border: 'none', cursor: 'pointer' }}>Mark Done Today</button>
               )}
-              {rev.done && <span className="text-accent-green text-xs font-mono">Done {formatDate(rev.doneOn, 'MMM d')}</span>}
-              {!isMissed && !rev.done && !isToday && <span className="text-text-muted text-xs">Upcoming</span>}
+              {rev.done && <span style={{ color: '#34D399', fontSize: 11, fontFamily: 'var(--font-mono)' }}>Done {formatDate(rev.doneOn, 'MMM d')}</span>}
+              {!isMissed && !rev.done && !isToday && <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>Upcoming</span>}
             </div>
           );
         })}
-        <button onClick={handleAddRevision} className="mt-3 text-accent-blue text-sm hover:text-accent-blue/80 transition-colors">+ Add Revision Date</button>
+        <button onClick={handleAddRevision} style={{ marginTop: 12, color: '#F97316', fontSize: 13, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>+ Add Revision Date</button>
       </div>
 
       {/* Section D — Notes */}
-      <div className="card mb-4">
+      <div className="liquid-glass mb-4" style={{ borderRadius: 16, padding: '18px 20px' }}>
         <SectionHeader>Notes</SectionHeader>
         <textarea
           value={localNotes}
@@ -481,40 +482,40 @@ export default function SubjectDetailPage() {
           rows={4}
           className="input w-full resize-none"
         />
-        <div className="text-text-muted text-xs mt-1 font-mono">Auto-saves as you type</div>
+        <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, marginTop: 4, fontFamily: 'var(--font-mono)' }}>Auto-saves as you type</div>
       </div>
 
       {/* Section E — Stats */}
-      <div className="card mb-6">
+      <div className="liquid-glass mb-6" style={{ borderRadius: 16, padding: '18px 20px' }}>
         <SectionHeader>Stats</SectionHeader>
         <div className="grid grid-cols-2 gap-4 text-sm">
           {daysSinceStart !== null && (
             <div>
               <div className="label">Days Since Started</div>
-              <div className="text-text-primary font-data">{daysSinceStart}</div>
+              <div style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-mono)', fontSize: 16 }}>{daysSinceStart}</div>
             </div>
           )}
           {actualRate !== null && (
             <div>
               <div className="label">Actual Units/Day Rate</div>
-              <div className="text-text-primary font-data">{actualRate}</div>
+              <div style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-mono)', fontSize: 16 }}>{actualRate}</div>
             </div>
           )}
           {subject.plannedEndDate && (
             <div>
               <div className="label">Planned End Date</div>
-              <div className="text-text-primary">{formatDate(subject.plannedEndDate)}</div>
+              <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13 }}>{formatDate(subject.plannedEndDate)}</div>
             </div>
           )}
           <div>
             <div className="label">Revisions Done / Planned</div>
-            <div className="text-text-primary font-data">
+            <div style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-mono)', fontSize: 16 }}>
               {(subject.revisionSessions || []).filter(r => r.done).length} / {(subject.revisionSessions || []).length}
             </div>
           </div>
         </div>
         {subject.plannedEndDate && actualRate && doneUnits < units.length && (
-          <div className="mt-3 text-xs text-accent-orange font-mono">
+          <div style={{ marginTop: 12, fontSize: 11, color: '#FBBF24', fontFamily: 'var(--font-mono)' }}>
             {(() => {
               const remaining = units.length - doneUnits;
               const daysNeeded = Math.ceil(remaining / parseFloat(actualRate));
@@ -529,8 +530,8 @@ export default function SubjectDetailPage() {
       </div>
 
       {/* Delete */}
-      <div className="card border-accent-red/20">
-        <h3 className="text-sm font-mono text-accent-red mb-3">Delete Subject</h3>
+      <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px', borderColor: 'rgba(248,113,113,0.2)' }}>
+        <h3 style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: '#F87171', marginBottom: 12 }}>Delete Subject</h3>
         {!confirmDelete ? (
           <button onClick={() => setConfirmDelete(true)} className="btn-danger text-sm">Delete Subject</button>
         ) : (

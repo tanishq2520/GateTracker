@@ -13,9 +13,9 @@ import {
 } from 'recharts';
 
 const CHART_STYLE = {
-  contentStyle: { background: '#292524', border: '1px solid #44403C', borderRadius: '6px', color: '#FAFAF9' },
-  tickStyle: { fill: '#A8A29E', fontSize: 10 },
-  gridStyle: { stroke: '#44403C' },
+  contentStyle: { background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: 'rgba(255,255,255,0.9)' },
+  tickStyle: { fill: 'rgba(255,255,255,0.4)', fontSize: 10 },
+  gridStyle: { stroke: 'rgba(255,255,255,0.06)' },
 };
 
 export default function AnalyticsPage() {
@@ -85,19 +85,19 @@ export default function AnalyticsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-4">
-      <h1 className="text-xl font-medium text-text-primary font-mono mb-6">Analytics</h1>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.02em', marginBottom: 24 }}>Analytics</h1>
 
       {/* 10.3 — Daily Hours (Last 30 days) */}
-      <div className="card">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Daily Hours Studied — Last 30 Days</h2>
+      <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+        <h2 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Daily Hours Studied — Last 30 Days</h2>
         {last30.every(d => d.hours === 0) ? (
-          <div className="text-text-muted text-sm text-center py-8">No study hours logged yet. Log today's study to see data here.</div>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>No study hours logged yet. Log today's study to see data here.</div>
         ) : (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={dailyData} barSize={8}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#44403C" />
-              <XAxis dataKey="date" tick={{ fill: '#8B90A0', fontSize: 8 }} interval={4} />
-              <YAxis tick={{ fill: '#8B90A0', fontSize: 10 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+              <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 8 }} interval={4} />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
               <Tooltip contentStyle={CHART_STYLE.contentStyle} />
               <ReferenceLine y={dailyTarget} stroke="#F97316" strokeDasharray="4 4" />
               <Bar dataKey="hours" radius={[2, 2, 0, 0]}
@@ -110,36 +110,36 @@ export default function AnalyticsPage() {
       </div>
 
       {/* 10.5 — Finish date projection */}
-      <div className="card">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Subject Finish Date Projection</h2>
+      <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+        <h2 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Subject Finish Date Projection</h2>
         {projectionData.length === 0 ? (
-          <div className="text-text-muted text-sm">No subjects with planned end dates. Set up subjects with dates to see projections.</div>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>No subjects with planned end dates. Set up subjects with dates to see projections.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2 px-2 text-text-muted text-xs font-mono">Subject</th>
-                  <th className="text-left py-2 px-2 text-text-muted text-xs font-mono">Planned End</th>
-                  <th className="text-left py-2 px-2 text-text-muted text-xs font-mono">Status</th>
-                  <th className="text-left py-2 px-2 text-text-muted text-xs font-mono">Track</th>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 400 }}>Subject</th>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 400 }}>Planned End</th>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 400 }}>Status</th>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', color: 'rgba(255,255,255,0.4)', fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 400 }}>Track</th>
                 </tr>
               </thead>
               <tbody>
                 {projectionData.map(r => (
-                  <tr key={r.name} className="border-b border-border/50">
-                    <td className="py-2 px-2">
+                  <tr key={r.name} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <td style={{ padding: '8px 8px' }}>
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full" style={{ background: r.color }} />
-                        <span className="text-text-primary text-sm">{r.name}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13 }}>{r.name}</span>
                       </div>
                     </td>
-                    <td className="py-2 px-2 text-text-secondary text-xs font-data">{r.planned}</td>
-                    <td className="py-2 px-2">
+                    <td style={{ padding: '8px 8px', color: 'rgba(255,255,255,0.55)', fontSize: 11, fontFamily: 'var(--font-mono)' }}>{r.planned}</td>
+                    <td style={{ padding: '8px 8px', color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>
                       {subjects[Object.keys(subjects).find(k => subjects[k].name === r.name)]?.status || 'not_started'}
                     </td>
-                    <td className="py-2 px-2">
-                      <span className={`text-xs font-mono ${r.onTrack ? 'text-accent-green' : 'text-accent-red'}`}>
+                    <td style={{ padding: '8px 8px' }}>
+                      <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: r.onTrack ? '#34D399' : '#F87171' }}>
                         {r.onTrack ? 'On track' : 'Overdue'}
                       </span>
                     </td>
@@ -152,13 +152,13 @@ export default function AnalyticsPage() {
       </div>
 
       {/* 10.4 — Missed days */}
-      <div className="card">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Missed Days Analysis</h2>
+      <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+        <h2 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 12 }}>Missed Days Analysis</h2>
         {missedEvents.length === 0 ? (
-          <div className="text-text-muted text-sm">No missed days recorded yet.</div>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>No missed days recorded yet.</div>
         ) : (
           <div>
-            <div className="text-accent-orange text-sm font-mono mb-3">
+            <div style={{ color: '#FBBF24', fontSize: 13, fontFamily: 'var(--font-mono)', marginBottom: 12 }}>
               You missed {missedEvents.length} planned event{missedEvents.length > 1 ? 's' : ''} across {Object.keys(missedBySubject).length} subject{Object.keys(missedBySubject).length !== 1 ? 's' : ''}.
             </div>
             <div className="space-y-2">
@@ -167,16 +167,16 @@ export default function AnalyticsPage() {
                 return (
                   <div key={subId} className="flex items-center gap-3 text-sm">
                     {subject && <div className="w-2 h-2 rounded-full shrink-0" style={{ background: subject.color }} />}
-                    <span className="text-text-primary">{subject?.name || 'Unknown'}</span>
-                    <span className="text-accent-red text-xs font-mono">{evs.length} missed</span>
+                    <span style={{ color: 'rgba(255,255,255,0.85)' }}>{subject?.name || 'Unknown'}</span>
+                    <span style={{ color: '#F87171', fontSize: 11, fontFamily: 'var(--font-mono)' }}>{evs.length} missed</span>
                   </div>
                 );
               })}
               {missedEvents.filter(e => !e.subjectId).length > 0 && (
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-border shrink-0" />
-                  <span className="text-text-secondary">Other events</span>
-                  <span className="text-accent-red text-xs font-mono">{missedEvents.filter(e => !e.subjectId).length} missed</span>
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }} />
+                  <span style={{ color: 'rgba(255,255,255,0.55)' }}>Other events</span>
+                  <span style={{ color: '#F87171', fontSize: 11, fontFamily: 'var(--font-mono)' }}>{missedEvents.filter(e => !e.subjectId).length} missed</span>
                 </div>
               )}
             </div>
@@ -186,28 +186,28 @@ export default function AnalyticsPage() {
 
       {/* 10.6 — Scatter: mock test score vs syllabus coverage */}
       {testsSorted.length >= 5 ? (
-        <div className="card">
-          <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted mb-3">Mock Score vs Study Progress</h2>
-          <p className="text-text-muted text-xs mb-3">Shows whether more syllabus coverage correlates with better scores.</p>
+        <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px' }}>
+          <h2 style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Mock Score vs Study Progress</h2>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, marginBottom: 12 }}>Shows whether more syllabus coverage correlates with better scores.</p>
           <ResponsiveContainer width="100%" height={200}>
             <ScatterChart>
-              <CartesianGrid strokeDasharray="3 3" stroke="#44403C" />
-              <XAxis type="number" dataKey="x" name="Syllabus %" tick={{ fill: '#8B90A0', fontSize: 10 }} label={{ value: 'Syllabus %', fill: '#8B90A0', fontSize: 9, position: 'bottom' }} />
-              <YAxis type="number" dataKey="y" name="Score %" tick={{ fill: '#8B90A0', fontSize: 10 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+              <XAxis type="number" dataKey="x" name="Syllabus %" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} label={{ value: 'Syllabus %', fill: 'rgba(255,255,255,0.35)', fontSize: 9, position: 'bottom' }} />
+              <YAxis type="number" dataKey="y" name="Score %" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }} />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={CHART_STYLE.contentStyle} formatter={(v, n) => [`${v}%`, n]} />
               <Scatter data={scatterData} fill="#A78BFA" />
             </ScatterChart>
           </ResponsiveContainer>
         </div>
       ) : testsSorted.length > 0 ? (
-        <div className="card text-text-muted text-sm">
+        <div className="liquid-glass" style={{ borderRadius: 16, padding: '18px 20px', color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
           Score vs Coverage scatter plot needs at least 5 mock tests. You have {testsSorted.length}. Add more test records to see this chart.
         </div>
       ) : null}
 
       {/* Empty state */}
       {subjectList.length === 0 && Object.values(tests).length === 0 && (
-        <div className="text-center py-16 text-text-muted text-sm">
+        <div style={{ textAlign: 'center', padding: '64px 0', color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>
           No data yet. Set up your subjects, log your study sessions, and add mock test results to see analytics here.
         </div>
       )}
