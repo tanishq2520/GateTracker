@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useAuthStore } from './stores/useAuthStore';
@@ -17,17 +17,18 @@ import XPFloat from './components/gamification/XPFloat';
 import BossBattle from './components/gamification/BossBattle';
 import ProtectedRoute from './components/ProtectedRoute';
 
-import OnboardingPage from './pages/OnboardingPage';
-import DashboardPage from './pages/DashboardPage';
-import CalendarPage from './pages/CalendarPage';
-import SubjectsPage from './pages/SubjectsPage';
-import SubjectDetailPage from './pages/SubjectDetailPage';
-import MockTestsPage from './pages/MockTestsPage';
-import AnalyticsPage from './pages/AnalyticsPage';
-import SettingsPage from './pages/SettingsPage';
-import AchievementsPage from './pages/AchievementsPage';
 import LoginPage from './pages/LoginPage';
-import ReportBugPage from './pages/ReportBugPage';
+
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const CalendarPage = lazy(() => import('./pages/CalendarPage'));
+const SubjectsPage = lazy(() => import('./pages/SubjectsPage'));
+const SubjectDetailPage = lazy(() => import('./pages/SubjectDetailPage'));
+const MockTestsPage = lazy(() => import('./pages/MockTestsPage'));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const AchievementsPage = lazy(() => import('./pages/AchievementsPage'));
+const ReportBugPage = lazy(() => import('./pages/ReportBugPage'));
 
 const DEFAULT_GOALS = {
   gateExamDate: null,
@@ -186,37 +187,39 @@ export default function App() {
       <ToastContainer />
       <XPFloat />
       <BossBattle />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute>
-              {dataLoaded ? <OnboardingPage /> : <LoadingScreen />}
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <ProtectedAppShell isOnline={isOnline} dataLoaded={dataLoaded} />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="calendar" element={<CalendarPage />} />
-          <Route path="subjects" element={<SubjectsPage />} />
-          <Route path="subjects/:id" element={<SubjectDetailPage />} />
-          <Route path="mock-tests" element={<MockTestsPage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="achievements" element={<AchievementsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="report-bug" element={<ReportBugPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to={user ? '/' : '/login'} replace />} />
-      </Routes>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                {dataLoaded ? <OnboardingPage /> : <LoadingScreen />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <ProtectedAppShell isOnline={isOnline} dataLoaded={dataLoaded} />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="calendar" element={<CalendarPage />} />
+            <Route path="subjects" element={<SubjectsPage />} />
+            <Route path="subjects/:id" element={<SubjectDetailPage />} />
+            <Route path="mock-tests" element={<MockTestsPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="achievements" element={<AchievementsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="report-bug" element={<ReportBugPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to={user ? '/' : '/login'} replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

@@ -78,6 +78,10 @@ export default function TopNav() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const handleProfileOpen = React.useCallback((open) => {
+    setProfileOpen(open);
+  }, []);
+
   const daysLeft = getDaysToExam();
   const displayName = profile?.displayName || user?.displayName || 'User';
   const initials = displayName
@@ -313,7 +317,7 @@ export default function TopNav() {
       )}
 
       {/* Bottom Nav Bar (Mobile Only) */}
-      <MobileBangleNav onProfileOpen={setProfileOpen} />
+      <MobileBangleNav onProfileOpen={handleProfileOpen} />
 
       {/* Profile Panel */}
       <ProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} />

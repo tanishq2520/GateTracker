@@ -34,7 +34,7 @@ function hexToRgb(hex) {
   } : { r: 0, g: 0, b: 0 };
 }
 
-export default function MobileBangleNav({ onProfileOpen }) {
+const MobileBangleNav = React.memo(function MobileBangleNav({ onProfileOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -129,6 +129,11 @@ export default function MobileBangleNav({ onProfileOpen }) {
         }
       }
 
+      if (!isOpen && state.openProgress < 0.01) {
+        state.openProgress = 0;
+        return;
+      }
+
       if (!state.isDragging && state.targetOffset !== null) {
         const diff = state.targetOffset - state.rotationOffset;
         state.rotationOffset += diff * (dt * 0.015);
@@ -200,14 +205,15 @@ export default function MobileBangleNav({ onProfileOpen }) {
                 wiggleRot *= Math.PI / 180;
               } else {
                 state.wiggleIndex = -1;
-                if (state.targetItemToNavigate === i) {
+                if (state.targetItemToNavigate) {
+                   const targetItem = state.targetItemToNavigate;
                    state.targetItemToNavigate = null;
                    setTimeout(() => {
                      setIsOpen(false);
-                     if (item.id === 'profile' && onProfileOpen) {
+                     if (targetItem.id === 'profile' && onProfileOpen) {
                        onProfileOpen(true);
                      } else {
-                       navigate(item.path);
+                       navigate(targetItem.path);
                      }
                    }, 50);
                 }
@@ -292,6 +298,7 @@ export default function MobileBangleNav({ onProfileOpen }) {
     state.dragStartOffset = state.rotationOffset;
     state.lastDragAngle = state.dragStartAngle;
     state.lastDragTime = Date.now();
+    state.dragStartTime = Date.now();
     state.hasMoved = false;
     state.velocity = 0;
     state.targetOffset = null;
@@ -326,7 +333,9 @@ export default function MobileBangleNav({ onProfileOpen }) {
     state.isDragging = false;
     e.target.releasePointerCapture(e.pointerId);
 
-    if (!state.hasMoved) {
+    const duration = Date.now() - (state.dragStartTime || state.lastDragTime);
+
+    if (!state.hasMoved && duration < 300) {
       const cx = 0;
       const cy = state.canvasH;
       const dx = e.clientX - cx;
@@ -355,7 +364,7 @@ export default function MobileBangleNav({ onProfileOpen }) {
             
             state.wiggleIndex = hit;
             state.wiggleStartTime = performance.now();
-            state.targetItemToNavigate = hit;
+            state.targetItemToNavigate = BANGLE_ITEMS[hit];
             return;
          }
       }
@@ -440,4 +449,6 @@ export default function MobileBangleNav({ onProfileOpen }) {
       </div>
     </>
   );
-}
+});
+
+export default MobileBangleNav;
