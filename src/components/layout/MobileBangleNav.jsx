@@ -93,7 +93,7 @@ const MobileBangleNav = React.memo(function MobileBangleNav({ onProfileOpen }) {
     if (!isOpen) {
       let activeIdx = BANGLE_ITEMS.findIndex(it => it.path !== '/profile' && location.pathname.startsWith(it.path));
       if (activeIdx === -1) activeIdx = 0; // Default dashboard
-      stateRef.current.rotationOffset = -activeIdx * SPACING;
+      stateRef.current.rotationOffset = ACTIVE_ANGLE - activeIdx * SPACING;
       stateRef.current.targetOffset = null;
       stateRef.current.velocity = 0;
     }
@@ -148,8 +148,9 @@ const MobileBangleNav = React.memo(function MobileBangleNav({ onProfileOpen }) {
         state.velocity *= 0.86;
         if (Math.abs(state.velocity) < 0.05) {
           state.velocity = 0;
-          const nearestIdx = Math.round(-state.rotationOffset / SPACING);
-          state.targetOffset = -nearestIdx * SPACING;
+          let offset = state.rotationOffset - ACTIVE_ANGLE;
+          let nearestIdx = Math.round(-offset / SPACING);
+          state.targetOffset = ACTIVE_ANGLE - nearestIdx * SPACING;
         }
       }
 
@@ -353,14 +354,14 @@ const MobileBangleNav = React.memo(function MobileBangleNav({ onProfileOpen }) {
             let displayAngle = ACTIVE_ANGLE + diff;
             
             let aDiff = Math.abs(displayAngle - clickDispAngle);
-            if (aDiff < 8) {
+            if (aDiff < 11) {
                hit = i;
             }
          });
 
          if (hit !== -1) {
-            let currentWrap = Math.round((state.rotationOffset + hit * SPACING) / TOTAL_WIDTH);
-            state.targetOffset = currentWrap * TOTAL_WIDTH - hit * SPACING;
+            let currentWrap = Math.round((state.rotationOffset + hit * SPACING - ACTIVE_ANGLE) / TOTAL_WIDTH);
+            state.targetOffset = ACTIVE_ANGLE + currentWrap * TOTAL_WIDTH - hit * SPACING;
             
             state.wiggleIndex = hit;
             state.wiggleStartTime = performance.now();
@@ -372,8 +373,9 @@ const MobileBangleNav = React.memo(function MobileBangleNav({ onProfileOpen }) {
     } else {
       if (state.velocity !== 0 && Math.abs(state.velocity) < 0.05) {
         state.velocity = 0;
-        let nearestIdx = Math.round(-state.rotationOffset / SPACING);
-        state.targetOffset = -nearestIdx * SPACING;
+        let offset = state.rotationOffset - ACTIVE_ANGLE;
+        let nearestIdx = Math.round(-offset / SPACING);
+        state.targetOffset = ACTIVE_ANGLE - nearestIdx * SPACING;
       }
     }
   };
