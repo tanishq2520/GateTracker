@@ -27,6 +27,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
 import AchievementsPage from './pages/AchievementsPage';
 import LoginPage from './pages/LoginPage';
+import ReportBugPage from './pages/ReportBugPage';
 
 const DEFAULT_GOALS = {
   gateExamDate: null,
@@ -212,6 +213,7 @@ export default function App() {
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="achievements" element={<AchievementsPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="report-bug" element={<ReportBugPage />} />
         </Route>
         <Route path="*" element={<Navigate to={user ? '/' : '/login'} replace />} />
       </Routes>

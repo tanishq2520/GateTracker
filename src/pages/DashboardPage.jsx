@@ -340,7 +340,7 @@ export default function DashboardPage() {
   const mobileDateLabel = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
-    <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto', boxSizing: 'border-box', minHeight: '100%' }}>
+    <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box', height: '100%' }}>
       <style>{`
         @media (max-width: 767px) {
           .desktop-dashboard { display: none !important; }
@@ -352,8 +352,10 @@ export default function DashboardPage() {
         }
       `}</style>
 
-      <div className="desktop-dashboard" style={{ flexDirection: 'column', gap: 16, flex: 1 }}>
+      <div className="desktop-dashboard" style={{ flexDirection: 'column', gap: 16, flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
         <LevelBanner />
+        
+        {subjectList.length === 0 && <GettingStartedGuide />}
 
         {/* Hero section */}
         <div style={{ paddingBottom: 8 }} className="animate-fade-rise">
@@ -501,6 +503,37 @@ export default function DashboardPage() {
       </div>
 
       {showLogModal && <LogTodayModal onClose={() => setShowLogModal(false)} />}
+    </div>
+  );
+}
+
+function GettingStartedGuide() {
+  return (
+    <div className="liquid-glass-strong animate-fade-rise" style={{ borderRadius: 16, padding: '24px', border: '1px solid rgba(249,115,22,0.3)', background: 'rgba(249,115,22,0.05)', marginBottom: 16 }}>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: '#F97316', marginBottom: 12 }}>Welcome aboard! Here's where to start:</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(249,115,22,0.2)', color: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>1</div>
+          <div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>Add your Subjects</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>Go to the <Link to="/subjects" style={{ color: '#F97316', textDecoration: 'none' }}>Subjects page</Link> and add the topics you need to cover.</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(249,115,22,0.2)', color: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>2</div>
+          <div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>Plan your Calendar</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>Use the <Link to="/calendar" style={{ color: '#F97316', textDecoration: 'none' }}>Calendar</Link> to assign study days and tasks. Try the "Quick Fill" helper!</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(249,115,22,0.2)', color: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>3</div>
+          <div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>Track Daily Progress</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>Back here on the Dashboard, mark tasks as done to earn XP and grow your streak.</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

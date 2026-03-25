@@ -12,7 +12,7 @@ export default function AppLayout({ isOnline }) {
       <TopNav />
 
       {/* Main content area below the nav */}
-      <div style={{ paddingTop: '57px', display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{ paddingTop: '57px', display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {/* Offline indicator */}
         {!isOnline && (
           <div

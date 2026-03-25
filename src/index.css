@@ -35,12 +35,12 @@
   border-radius: inherit;
   padding: 1.4px;
   background: linear-gradient(180deg,
-    rgba(255,255,255,0.45) 0%,
-    rgba(255,255,255,0.15) 20%,
+    rgba(255,255,255,0.25) 0%,
+    rgba(255,255,255,0.08) 20%,
     rgba(255,255,255,0) 40%,
     rgba(255,255,255,0) 60%,
-    rgba(255,255,255,0.15) 80%,
-    rgba(255,255,255,0.45) 100%);
+    rgba(255,255,255,0.08) 80%,
+    rgba(255,255,255,0.25) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -65,11 +65,11 @@
   border-radius: inherit;
   padding: 1px;
   background: linear-gradient(180deg,
-    rgba(255,255,255,0.35) 0%,
-    rgba(255,255,255,0.08) 30%,
+    rgba(255,255,255,0.20) 0%,
+    rgba(255,255,255,0.05) 30%,
     rgba(255,255,255,0) 50%,
-    rgba(255,255,255,0.08) 70%,
-    rgba(255,255,255,0.35) 100%);
+    rgba(255,255,255,0.05) 70%,
+    rgba(255,255,255,0.20) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -100,6 +100,7 @@
     height: 100%;
     margin: 0;
     padding: 0;
+    overflow: hidden; /* Prevent double scroll at root level */
   }
 
   body {
@@ -194,13 +195,13 @@
   .input {
     display: block;
     width: 100%;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(25, 25, 25, 0.4) !important; /* Force dark background for inputs */
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
     padding: 8px 12px;
     font-size: 0.875rem;
     font-family: var(--font-body);
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.95) !important; /* High contrast text */
     outline: none;
     transition: border-color 0.15s;
   }
@@ -214,8 +215,8 @@
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: rgba(255, 255, 255, 0.4);
-    margin-bottom: 4px;
+    color: rgba(255, 255, 255, 0.5); /* Slightly brighter for better visibility */
+    margin-bottom: 6px;
   }
 
   /* Badge */
